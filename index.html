@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CampusBoost · AI Workshop Ambassador System</title>
+<meta name="description" content="Prototype: WhatsApp-style campus ambassador bot, referral tracker and growth dashboard for a free AI workshop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FBFAFE; --surface: #FFFFFF; --ink: #2E3047; --ink-2: #5B5F7A; --muted: #7C7F93; --line: #E9E6F2;
+  --sage: #3F8C72; --sage-ink: #FFFFFF;
+  --lav: #E6DFF7; --peach: #FCDCCB; --butter: #F7D58B; --sky: #CFE0F6; --mint: #CDEBDD;
+  --lav-ink: #4B3F7A; --peach-ink: #8A4528; --butter-ink: #6B5110; --sky-ink: #24507F; --mint-ink: #22614B;
+  --chat-bg: #EFEAE2; --bubble-me: #D9FDD3; --bubble-bot: #FFFFFF; --wa: #128C7E;
+  --danger: #B3402F;
+  --r-lg: 22px; --r: 14px; --r-sm: 10px;
+  --display: "Bricolage Grotesque", "Trebuchet MS", "Segoe UI", sans-serif;
+  --body: "DM Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color-scheme: light; box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17182A; --surface: #212338; --ink: #EDECF6; --ink-2: #C3C3D6; --muted: #9A9CB3; --line: #33354F;
+    --sage: #7CC9AC; --sage-ink: #10241C;
+    --lav: #3A3366; --peach: #5B3527; --butter: #574414; --sky: #22395A; --mint: #1F4537;
+    --lav-ink: #DCD3FF; --peach-ink: #FFD2BF; --butter-ink: #FBE2A6; --sky-ink: #CFE3FF; --mint-ink: #C4F0DD;
+    --chat-bg: #0F1A20; --bubble-me: #1F4D3F; --bubble-bot: #24283D; --wa: #3CC7A8; --danger: #FF9C8A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17182A; --surface: #212338; --ink: #EDECF6; --ink-2: #C3C3D6; --muted: #9A9CB3; --line: #33354F;
+  --sage: #7CC9AC; --sage-ink: #10241C;
+  --lav: #3A3366; --peach: #5B3527; --butter: #574414; --sky: #22395A; --mint: #1F4537;
+  --lav-ink: #DCD3FF; --peach-ink: #FFD2BF; --butter-ink: #FBE2A6; --sky-ink: #CFE3FF; --mint-ink: #C4F0DD;
+  --chat-bg: #0F1A20; --bubble-me: #1F4D3F; --bubble-bot: #24283D; --wa: #3CC7A8; --danger: #FF9C8A; color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+img, canvas { max-width: 100%; display: block; }
+button, input, select { font: inherit; color: inherit; }
+a { color: var(--sage); }
+:focus-visible { outline: 3px solid var(--sage); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 18px 18px 110px; }
+.wrap.wide { max-width: 1040px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.08; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2.3rem, 9vw, 3.5rem); font-weight: 800; }
+h2 { font-size: 1.55rem; font-weight: 800; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+p { margin: 0; }
+.muted { color: var(--muted); } .small { font-size: .875rem; }
+.view { display: none; } .view.on { display: block; }
+.hidden { display: none !important; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.brand-dot { width: 28px; height: 28px; border-radius: 9px; background: var(--butter); display: grid; place-items: center; }
+.seats { font-size: .8rem; font-weight: 700; padding: 6px 11px; border-radius: 999px; background: var(--peach); color: var(--peach-ink); white-space: nowrap; }
+
+.hero h1 .l2 { display: block; color: var(--sage); }
+.hero .sub { margin-top: 14px; font-size: 1.05rem; color: var(--ink-2); }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.fact { font-size: .85rem; font-weight: 500; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.cta-row { display: grid; gap: 10px; margin-top: 20px; }
+@media (min-width: 520px) { .cta-row { grid-template-columns: 1fr 1fr; } }
+.btn { border: 0; cursor: pointer; border-radius: var(--r); padding: 12px 16px; font-weight: 700; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; min-height: 48px; }
+.btn-main { background: var(--sage); color: var(--sage-ink); }
+.btn-soft { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.btn-wa { background: #25D366; color: #08311A; }
+.btn-sm { min-height: 34px; padding: 6px 10px; font-size: .82rem; border-radius: 9px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.w100 { width: 100%; }
+
+.section { margin-top: 32px; }
+.section > h2 { margin-bottom: 12px; }
+.steps4 { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.steps4 li { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; padding: 14px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); }
+.steps4 .n { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 1.1rem; }
+.steps4 b { display: block; }
+.rewards { margin-top: 12px; border-radius: var(--r); padding: 16px; background: var(--butter); color: var(--butter-ink); }
+.rewards ul { margin: 8px 0 0; padding-left: 18px; }
+.teaser { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border-radius: var(--r); background: var(--sky); color: var(--sky-ink); text-decoration: none; }
+.teaser b { font-family: var(--display); font-size: 1.05rem; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px; }
+label.f { display: block; font-weight: 700; font-size: .9rem; margin: 14px 0 6px; }
+.input { width: 100%; padding: 12px 14px; border-radius: var(--r-sm); border: 1.5px solid var(--line); background: var(--bg); min-height: 48px; }
+.input:focus { border-color: var(--sage); outline: none; }
+.hint { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+.error { color: var(--danger); font-weight: 500; font-size: .9rem; margin-top: 10px; }
+.invited { padding: 12px 14px; border-radius: var(--r); background: var(--mint); color: var(--mint-ink); font-weight: 500; margin-bottom: 14px; }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 500; margin-top: 14px; }
+.linkbox { display: flex; gap: 8px; margin-top: 10px; }
+.linkbox input { flex: 1; min-width: 0; font-size: .85rem; }
+.stats2 { display: flex; gap: 10px; margin-top: 14px; }
+.stats2 > div { flex: 1; padding: 14px; border-radius: var(--r); }
+.stats2 b { display: block; font-family: var(--display); font-size: 2rem; line-height: 1; }
+
+/* ---- WhatsApp-style chat ---- */
+.phone { border-radius: 24px; overflow: hidden; border: 1px solid var(--line); background: var(--chat-bg); display: flex; flex-direction: column; height: min(78vh, 720px); }
+.chat-head { background: var(--wa); color: #fff; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+.chat-head .av { width: 38px; height: 38px; border-radius: 50%; background: #fff; color: var(--wa); display: grid; place-items: center; font-weight: 800; font-family: var(--display); }
+.chat-head b { display: block; line-height: 1.2; }
+.chat-head span { font-size: .78rem; opacity: .9; }
+.chat-head .reset { margin-left: auto; background: rgba(255,255,255,.18); color: #fff; border: 0; border-radius: 8px; padding: 6px 10px; font-size: .78rem; cursor: pointer; }
+.chat-body { flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+.bubble { max-width: 84%; padding: 8px 11px 6px; border-radius: 12px; font-size: .93rem; box-shadow: 0 1px 1px rgba(0,0,0,.06); white-space: pre-wrap; word-wrap: break-word; }
+.bubble.bot { background: var(--bubble-bot); align-self: flex-start; border-top-left-radius: 4px; }
+.bubble.me { background: var(--bubble-me); align-self: flex-end; border-top-right-radius: 4px; }
+.bubble.alert { border-left: 4px solid var(--wa); }
+.bubble time { display: block; text-align: right; font-size: .68rem; color: var(--muted); margin-top: 2px; }
+.bubble .lk { word-break: break-all; color: var(--wa); font-weight: 700; }
+.day-chip { align-self: center; font-size: .72rem; background: var(--surface); color: var(--muted); padding: 3px 10px; border-radius: 8px; margin: 6px 0; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 0; }
+.quick button { border: 1px solid var(--wa); color: var(--wa); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: .86rem; font-weight: 700; cursor: pointer; }
+.chat-input { display: flex; gap: 8px; padding: 10px 12px 12px; }
+.chat-input input { flex: 1; border-radius: 999px; border: 0; padding: 11px 16px; background: var(--surface); min-height: 44px; }
+.chat-input button { width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--wa); color: #fff; font-size: 1.1rem; cursor: pointer; }
+.progress-card { margin: 0 0 6px; align-self: stretch; background: var(--surface); border-radius: 12px; padding: 10px 12px; font-size: .85rem; }
+.pbar { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; margin-top: 6px; }
+.pbar i { display: block; height: 100%; border-radius: 5px; background: var(--wa); }
+.preview-note { padding: 8px 12px; background: var(--butter); color: var(--butter-ink); font-size: .8rem; font-weight: 500; }
+.sim-note { font-size: .78rem; color: var(--muted); margin-top: 8px; text-align: center; }
+
+/* ---- leaderboard ---- */
+.tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; margin-bottom: 14px; }
+.tabs button { flex: 1; border: 0; background: transparent; padding: 9px 6px; border-radius: 999px; font-weight: 700; cursor: pointer; color: var(--ink-2); font-size: .9rem; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.rank { list-style: none; margin: 0; padding: 0; }
+.rank li { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); }
+.rank li + li { margin-top: 8px; }
+.rank .pos { font-family: var(--display); font-weight: 800; font-size: 1.1rem; text-align: center; }
+.rank li.t1 { background: var(--butter); color: var(--butter-ink); border-color: transparent; }
+.rank li.t2 { background: var(--lav); color: var(--lav-ink); border-color: transparent; }
+.rank li.t3 { background: var(--peach); color: var(--peach-ink); border-color: transparent; }
+.rank .who b { display: block; } .rank .who span { font-size: .82rem; opacity: .8; }
+.rank .score { font-family: var(--display); font-weight: 800; font-size: 1.25rem; text-align: right; }
+.rank .score small { display: block; font-family: var(--body); font-size: .7rem; font-weight: 500; opacity: .75; }
+.bar { height: 6px; background: rgba(127,127,127,.2); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: currentColor; opacity: .55; border-radius: 3px; }
+.prize { padding: 14px; border-radius: var(--r); background: var(--mint); color: var(--mint-ink); font-size: .9rem; margin-bottom: 14px; }
+
+/* ---- dashboard ---- */
+.kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+@media (min-width: 820px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
+.kpi { padding: 16px; border-radius: var(--r); }
+.kpi b { display: block; font-family: var(--display); font-size: 1.9rem; line-height: 1.05; }
+.kpi span { font-size: .85rem; font-weight: 500; }
+.grid2 { display: grid; gap: 14px; margin-top: 14px; }
+@media (min-width: 820px) { .grid2 { grid-template-columns: 1fr 1fr; } .span2 { grid-column: 1 / -1; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px; }
+.panel h3 { margin-bottom: 12px; }
+.amb-grid { display: grid; gap: 10px; }
+@media (min-width: 820px) { .amb-grid { grid-template-columns: repeat(3, 1fr); } }
+.amb { border-radius: var(--r); padding: 14px; }
+.amb .slot { font-size: .75rem; font-weight: 700; opacity: .8; }
+.amb b.nm { display: block; font-family: var(--display); font-size: 1.15rem; margin-top: 2px; }
+.amb .big { font-family: var(--display); font-weight: 800; font-size: 1.6rem; margin-top: 8px; }
+.amb .pbar { background: rgba(255,255,255,.55); }
+.amb .pbar i { background: currentColor; opacity: .7; }
+.amb .row { display: flex; justify-content: space-between; gap: 8px; font-size: .82rem; margin-top: 8px; flex-wrap: wrap; }
+.amb .acts { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.amb .acts a, .amb .acts button { font-size: .78rem; font-weight: 700; padding: 6px 9px; border-radius: 8px; background: rgba(255,255,255,.6); color: inherit; text-decoration: none; border: 0; cursor: pointer; }
+.hbar { display: grid; grid-template-columns: 130px 1fr 40px; gap: 8px; align-items: center; font-size: .88rem; }
+.hbar + .hbar { margin-top: 8px; }
+.hbar .track { height: 12px; border-radius: 6px; background: var(--bg); overflow: hidden; }
+.hbar .fill { height: 100%; border-radius: 6px; }
+.hbar b { text-align: right; }
+.scroll-x { overflow-x: auto; }
+table.t { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 460px; }
+table.t th, table.t td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.t .num { text-align: right; }
+.pill { font-size: .72rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.p-ok { background: var(--mint); color: var(--mint-ink); } .p-bad { background: var(--peach); color: var(--peach-ink); }
+.p-today { background: var(--sky); color: var(--sky-ink); } .p-pend { background: var(--lav); color: var(--lav-ink); }
+.p-appr { background: var(--butter); color: var(--butter-ink); }
+.alert { margin-top: 14px; padding: 14px 16px; border-radius: var(--r); background: var(--peach); color: var(--peach-ink); font-weight: 500; }
+.alert.good { background: var(--mint); color: var(--mint-ink); }
+.budget-meter { height: 18px; border-radius: 9px; background: var(--bg); overflow: hidden; display: flex; margin: 6px 0 8px; border: 1px solid var(--line); }
+.budget-meter i { display: block; height: 100%; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .8rem; color: var(--ink-2); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--c); }
+.ai-tip { padding: 14px; border-radius: var(--r); background: var(--lav); color: var(--lav-ink); margin-top: 10px; white-space: pre-wrap; }
+.demo-tag { font-size: .68rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: var(--lav); color: var(--lav-ink); margin-left: 6px; vertical-align: middle; }
+.checklist { list-style: none; padding: 0; margin: 0; font-size: .88rem; }
+.checklist li { padding: 6px 0; border-bottom: 1px dashed var(--line); display: flex; gap: 8px; }
+.checklist li:last-child { border-bottom: 0; }
+
+nav.tabbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: center; gap: 2px; z-index: 20; }
+nav.tabbar a { flex: 1; max-width: 120px; text-decoration: none; color: var(--muted); font-size: .72rem; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border-radius: 12px; text-align: center; }
+nav.tabbar a .ic { font-size: 1.2rem; line-height: 1; }
+nav.tabbar a[aria-current="page"] { color: var(--ink); background: var(--lav); }
+.toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 500; font-size: .9rem; z-index: 30; max-width: 90vw; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <header class="topbar">
+    <div class="brand"><span class="brand-dot" aria-hidden="true">✦</span>CampusBoost</div>
+    <div class="seats" id="seats">Limited seats</div>
+  </header>
+
+  <!-- ================= HOME ================= -->
+  <section class="view" id="v-home" aria-labelledby="h-home">
+    <div class="hero">
+      <h1 id="h-home">Don’t just use AI.<span class="l2">Build it.</span></h1>
+      <p class="sub">“Build Your First AI Project in 60 Minutes”: a free online workshop for final-year B.Tech students. Train your own AI on photos from your branch, and leave with a live app you can show in interviews.</p>
+      <div class="facts"><span class="fact">Free</span><span class="fact">Online</span><span class="fact">60 minutes</span><span class="fact">Any branch</span><span class="fact">No AI background needed</span></div>
+      <div class="cta-row">
+        <a class="btn btn-main" href="#register">Register free</a>
+        <a class="btn btn-soft" href="#bot">💬 Become a campus partner</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>What you’ll build in 60 minutes</h2>
+      <ol class="steps4">
+        <li><span class="n" style="background:var(--mint);color:var(--mint-ink)">1</span><div><b>Collect 20–30 photos from your branch</b><span class="muted small">Cracked vs normal walls, working vs faulty circuits, healthy vs diseased leaves.</span></div></li>
+        <li><span class="n" style="background:var(--sky);color:var(--sky-ink)">2</span><div><b>Train your own AI model</b><span class="muted small">It learns from your photos, so it’s yours, not a copy of your classmate’s.</span></div></li>
+        <li><span class="n" style="background:var(--lav);color:var(--lav-ink)">3</span><div><b>Connect it to an AI that explains the result</b><span class="muted small">Your app says what it sees and what to do next.</span></div></li>
+        <li><span class="n" style="background:var(--peach);color:var(--peach-ink)">4</span><div><b>Get a live link</b><span class="muted small">Plus a GitHub repo, a resume line and a LinkedIn post.</span></div></li>
+      </ol>
+      <div class="rewards">
+        <b>Top performers also win</b>
+        <ul>
+          <li>AI certification exam vouchers for the top 3 students</li>
+          <li>“Inside Big Tech”: a virtual tour + Q&amp;A with engineers</li>
+          <li>A 1:1 mock interview with a professional</li>
+          <li>₹200 for the student who invites the most friends</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <a class="teaser" href="#board"><span><b id="teaserText">Which college is leading?</b><br><span class="small">See the leaderboard</span></span><span aria-hidden="true" style="font-size:1.5rem">🏆</span></a>
+    </div>
+  </section>
+
+  <!-- ================= REGISTER ================= -->
+  <section class="view" id="v-register" aria-labelledby="h-reg">
+    <h2 id="h-reg" style="margin-bottom:6px">Register free</h2>
+    <p class="muted" style="margin-bottom:16px">Takes 30 seconds. The joining link and a short setup checklist come on WhatsApp.</p>
+    <div class="invited hidden" id="invited"></div>
+    <form class="card" id="regForm" novalidate>
+      <label class="f" for="fName">Your name</label>
+      <input class="input" id="fName" autocomplete="name" maxlength="40">
+      <label class="f" for="fCollege">College</label>
+      <select class="input" id="fCollege"></select>
+      <input class="input hidden" id="fCollegeOther" placeholder="Type your college name" maxlength="60" style="margin-top:8px">
+      <label class="f" for="fBranch">Branch</label>
+      <select class="input" id="fBranch"></select>
+      <label class="f" for="fPhone">WhatsApp number</label>
+      <input class="input" id="fPhone" inputmode="numeric" autocomplete="tel" placeholder="10-digit number" maxlength="10">
+      <p class="hint">Used only for the joining link and reminders. Never shown to anyone else.</p>
+      <label class="toggle"><input type="checkbox" id="fFinal"> I’m a final-year B.Tech student</label>
+      <p class="error hidden" id="regErr" role="alert"></p>
+      <button class="btn btn-main w100" type="submit" id="regBtn" style="margin-top:16px">Register free</button>
+    </form>
+  </section>
+
+  <!-- ================= STUDENT PAGE ================= -->
+  <section class="view" id="v-me" aria-labelledby="h-me">
+    <div id="meEmpty" class="card">
+      <h2 id="h-me">Your invite link</h2>
+      <p class="muted" style="margin-top:8px">Register first to get your own invite link.</p>
+      <a class="btn btn-main w100" href="#register" style="margin-top:16px">Register free</a>
+    </div>
+    <div id="meFull" class="hidden">
+      <h2 id="meTitle">You’re in!</h2>
+      <p class="muted" style="margin-top:6px">Your joining link and setup checklist will come on WhatsApp.</p>
+      <div class="card" style="margin-top:16px">
+        <h3>Invite friends</h3>
+        <p class="small muted" style="margin-top:4px">Each friend who registers with your link counts for you. The student with the most wins ₹200.</p>
+        <div class="linkbox"><input class="input" id="myLink" readonly aria-label="Your invite link"><button class="btn btn-soft" id="copyMy" type="button">Copy</button></div>
+        <a class="btn btn-wa w100" id="waMy" target="_blank" rel="noopener" style="margin-top:10px">Share on WhatsApp</a>
+        <div class="stats2">
+          <div style="background:var(--mint);color:var(--mint-ink)"><b id="myPoints">0</b><span class="small">friends joined</span></div>
+          <div style="background:var(--sky);color:var(--sky-ink)"><b id="myRank">–</b><span class="small">your rank</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PARTNER BOT ================= -->
+  <section class="view" id="v-bot" aria-labelledby="h-bot">
+    <h2 id="h-bot" class="hidden">Campus partner bot</h2>
+    <div class="phone">
+      <div class="chat-head">
+        <span class="av" aria-hidden="true">CB</span>
+        <div><b>CampusBoost Bot</b><span id="botStatus">NxtWave AI Workshop · online</span></div>
+        <button class="reset" id="botReset" type="button">Start over</button>
+      </div>
+      <div class="preview-note hidden" id="previewNote"></div>
+      <div class="chat-body" id="chat" aria-live="polite"></div>
+      <div class="quick" id="quick"></div>
+      <form class="chat-input" id="chatForm">
+        <input id="chatText" placeholder="Type a message" autocomplete="off" aria-label="Message">
+        <button type="submit" aria-label="Send">➤</button>
+      </form>
+    </div>
+    <p class="sim-note">Simulated WhatsApp chat. A real launch would use the WhatsApp Business API.</p>
+  </section>
+
+  <!-- ================= LEADERBOARD ================= -->
+  <section class="view" id="v-board" aria-labelledby="h-board">
+    <h2 id="h-board" style="margin-bottom:6px">Leaderboard</h2>
+    <p class="muted" style="margin-bottom:14px">Updates live. Only unique, verified sign-ups count.</p>
+    <div class="prize">🏆 Ambassadors earn ₹1.20 per verified sign-up, up to their target. The student who invites the most friends wins ₹200.</div>
+    <div class="tabs" role="tablist">
+      <button role="tab" type="button" data-tab="amb" aria-selected="true">Ambassadors</button>
+      <button role="tab" type="button" data-tab="col" aria-selected="false">Colleges</button>
+      <button role="tab" type="button" data-tab="stu" aria-selected="false">Students</button>
+    </div>
+    <ul class="rank" id="rankList"></ul>
+    <p class="muted small" id="boardNote" style="margin-top:12px"></p>
+  </section>
+
+  <!-- ================= DASHBOARD ================= -->
+  <section class="view" id="v-dash" aria-labelledby="h-dash">
+    <h2 id="h-dash">Organiser dashboard</h2>
+    <p class="muted" style="margin-top:4px">Check every evening. Push what works. Open to everyone in this demo; a real launch would add an organiser login.</p>
+    <p class="small muted" style="margin-top:4px">Data is saved in your browser only. <button type="button" id="resetDemo" class="btn btn-soft btn-sm" style="margin-left:6px">Reset demo data</button></p>
+    <label class="toggle"><input type="checkbox" id="showDemo" checked> Include demo data</label>
+
+    <div class="kpis" style="margin-top:14px">
+      <div class="kpi" style="background:var(--mint);color:var(--mint-ink)"><b id="kTotal">0</b><span>verified of 500</span></div>
+      <div class="kpi" style="background:var(--sky);color:var(--sky-ink)"><b id="kToday">0</b><span>today</span></div>
+      <div class="kpi" style="background:var(--lav);color:var(--lav-ink)"><b id="kDay">–</b><span>campaign day</span></div>
+      <div class="kpi" style="background:var(--butter);color:var(--butter-ink)"><b id="kSpent">₹0</b><span>committed of ₹2,000</span></div>
+    </div>
+    <div id="dashAlert"></div>
+
+    <div class="panel" style="margin-top:14px">
+      <h3>The 3 campus ambassadors</h3>
+      <div class="amb-grid" id="ambGrid"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Daily target vs actual</h3>
+        <div class="scroll-x"><table class="t" id="daysTable"></table></div>
+      </div>
+      <div class="panel">
+        <h3>Where sign-ups come from</h3>
+        <div id="bySource"></div>
+        <h3 style="margin-top:18px">By college</h3>
+        <div id="byCollege"></div>
+      </div>
+
+      <div class="panel span2">
+        <h3>Rewards &amp; budget</h3>
+        <div class="budget-meter" id="budgetMeter" aria-hidden="true"></div>
+        <div class="legend" id="budgetLegend"></div>
+        <div class="scroll-x" style="margin-top:12px"><table class="t" id="rewardTable"></table></div>
+        <p class="small muted" style="margin-top:8px">Payments are simulated. A real launch would pay through an authorised UPI payout service. We only store UPI IDs, never PINs or OTPs.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Smart recommendation</h3>
+        <p class="small muted">Reads today’s numbers and suggests where to push next.</p>
+        <button class="btn btn-main w100" id="aiBtn" type="button" style="margin-top:10px">Get today’s recommendation</button>
+        <div id="aiOut" aria-live="polite"></div>
+      </div>
+      <div class="panel">
+        <h3>Other partners &amp; tracking links</h3>
+        <div id="partnerList"></div>
+        <p class="small" style="margin-top:12px"><b>Campus screen QR:</b> <span id="qrLink" style="word-break:break-all"></span></p>
+      </div>
+
+      <div class="panel">
+        <h3>Latest sign-ups</h3>
+        <ul class="rank" id="recent"></ul>
+      </div>
+      <div class="panel">
+        <h3>Checks this system passes</h3>
+        <ul class="checklist">
+          <li>✅ An ambassador onboards in chat and gets a unique referral code</li>
+          <li>✅ A student registers through that code and is credited to the right ambassador</li>
+          <li>✅ The same WhatsApp number can’t be counted twice</li>
+          <li>✅ Milestones (10, 25%, 50%, 75%, 100%) send automatic chat messages</li>
+          <li>✅ Every channel has its own tracked link</li>
+          <li>✅ Rewards are calculated from verified sign-ups: Pending → Approved → Paid</li>
+          <li>✅ Total rewards can never go above ₹2,000</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<nav class="tabbar" aria-label="Main">
+  <a href="#home" data-v="home"><span class="ic" aria-hidden="true">✦</span>Home</a>
+  <a href="#me" data-v="me"><span class="ic" aria-hidden="true">🔗</span>My link</a>
+  <a href="#bot" data-v="bot"><span class="ic" aria-hidden="true">💬</span>Partner bot</a>
+  <a href="#board" data-v="board"><span class="ic" aria-hidden="true">🏆</span>Leaderboard</a>
+  <a href="#dash" data-v="dash" id="navDash" class="hidden"><span class="ic" aria-hidden="true">📊</span>Dashboard</a>
+</nav>
+
+<script>
+(() => {
+  "use strict";
+  // ================= CONFIG =================
+  const ARTIFACT_URL = location.origin + location.pathname;
+  const TARGET = 500, CAPACITY = 600, BUDGET = 2000, PER_SIGNUP = 1.2;
+  const SLOTS = [
+    { id: "A", target: 250, max: 300 },
+    { id: "B", target: 150, max: 180 },
+    { id: "C", target: 100, max: 120 },
+  ];
+  const DAY_TARGETS = [0, 150, 240, 320, 400, 470, 500];
+  const DAY_PLAN = ["Prep: onboard ambassadors", "Big launch, all channels", "Check + push best channel", "Leaderboard opens", "Squad push", "Urgency: 100 seats left", "Final call"];
+  const COLLEGES = ["SRM University AP", "VIT-AP University", "KL University", "GITAM University", "VVIT", "RVR & JC College", "Andhra University", "JNTU Kakinada"];
+  const BRANCHES = ["CSE", "IT", "ECE", "EEE", "Civil", "Mechanical", "Other"];
+  const SRC = { ambassador: "Ambassadors (WhatsApp)", referral: "Student referrals", placement: "Placement cells", influencer: "Influencers & clubs", screens: "Campus screens", direct: "Direct" };
+  const SRC_COLOR = { ambassador: "var(--sage)", referral: "#8FB6E6", placement: "#E9BE5C", influencer: "#F0A98A", screens: "#B9A8EA", direct: "var(--muted)" };
+  const ROLE_LABEL = { ambassador: "Campus ambassador", influencer: "Influencer / club lead", placement: "Placement coordinator" };
+  const PREFIX = { ambassador: "a", influencer: "i", placement: "p" };
+
+  const SEED = {"partners":{"keerthig":{"code":"keerthig","role":"influencer","slot":null,"name":"Keerthi (demo)","firstName":"Keerthi","college":"GITAM University","branch":"IT","milestonesSent":[],"createdAt":"2026-10-25T10:00:00.000Z","demo":true},"klplace":{"code":"klplace","role":"placement","slot":null,"name":"KL Placement Cell (demo)","firstName":"KL Placement Cell","college":"KL University","branch":null,"milestonesSent":[],"createdAt":"2026-10-25T10:00:00.000Z","demo":true},"priyakq":{"code":"priyakq","role":"ambassador","slot":"B","name":"Priya (demo)","firstName":"Priya","college":"KL University","branch":"ECE","milestonesSent":[],"createdAt":"2026-10-25T10:00:00.000Z","demo":true},"rahulvm":{"code":"rahulvm","role":"ambassador","slot":"C","name":"Rahul (demo)","firstName":"Rahul","college":"VIT-AP University","branch":"CSE","milestonesSent":[],"createdAt":"2026-10-25T10:00:00.000Z","demo":true},"srmplace":{"code":"srmplace","role":"placement","slot":null,"name":"SRM AP Placement Cell (demo)","firstName":"SRM AP Placement Cell","college":"SRM University AP","branch":null,"milestonesSent":[],"createdAt":"2026-10-25T10:00:00.000Z","demo":true},"tejacl":{"code":"tejacl","role":"influencer","slot":null,"name":"Teja (demo)","firstName":"Teja","college":"SRM University AP","branch":"CSE","milestonesSent":[],"createdAt":"2026-10-25T10:00:00.000Z","demo":true}},"msgs":{"keerthig-w0":{"to":"keerthig","text":"🎉 You’re registered as Influencer / club lead!\n\nYour code: KEERTHIG\nYour link: {{LINK}}\n\nI’ll message you here at every milestone.","at":"2026-10-25T10:00:00.000Z","kind":"welcome","demo":true},"klplace-w0":{"to":"klplace","text":"🎉 You’re registered as Placement coordinator!\n\nYour code: KLPLACE\nYour link: {{LINK}}\n\nI’ll message you here at every milestone.","at":"2026-10-25T10:00:00.000Z","kind":"welcome","demo":true},"priyakq-w0":{"to":"priyakq","text":"🎉 You’re registered as Ambassador B!\n\nYour code: PRIYAKQ\nYour link: {{LINK}}\n\nI’ll message you here at every milestone.","at":"2026-10-25T10:00:00.000Z","kind":"welcome","demo":true},"rahulvm-w0":{"to":"rahulvm","text":"🎉 You’re registered as Ambassador C!\n\nYour code: RAHULVM\nYour link: {{LINK}}\n\nI’ll message you here at every milestone.","at":"2026-10-25T10:00:00.000Z","kind":"welcome","demo":true},"srmplace-w0":{"to":"srmplace","text":"🎉 You’re registered as Placement coordinator!\n\nYour code: SRMPLACE\nYour link: {{LINK}}\n\nI’ll message you here at every milestone.","at":"2026-10-25T10:00:00.000Z","kind":"welcome","demo":true},"tejacl-w0":{"to":"tejacl","text":"🎉 You’re registered as Influencer / club lead!\n\nYour code: TEJACL\nYour link: {{LINK}}\n\nI’ll message you here at every milestone.","at":"2026-10-25T10:00:00.000Z","kind":"welcome","demo":true}},"payouts":{"keerthig":{"code":"keerthig","upi":"keerthi@ybl","at":"2026-10-25T10:00:00.000Z","demo":true},"priyakq":{"code":"priyakq","upi":"priya@ybl","at":"2026-10-25T10:00:00.000Z","demo":true},"rahulvm":{"code":"rahulvm","upi":"rahul@ybl","at":"2026-10-25T10:00:00.000Z","demo":true},"tejacl":{"code":"tejacl","upi":"teja@ybl","at":"2026-10-25T10:00:00.000Z","demo":true}},"demoStudents":[{"code":"karths021","name":"Karthik (demo)","firstName":"Karthik","college":"SRM University AP","branch":"ECE","source":"influencer","referredBy":"tejacl","phoneHash":"273f694574910fba25489c2c","createdAt":"2026-10-26T08:00:49.000Z","demo":true},{"code":"sravas008","name":"Sravani (demo)","firstName":"Sravani","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"dccfa5fe7bf8555a0b8d7346","createdAt":"2026-10-26T08:06:16.000Z","demo":true},{"code":"prakas114","name":"Prakash (demo)","firstName":"Prakash","college":"SRM University AP","branch":"Civil","source":"placement","referredBy":"srmplace","phoneHash":"a12e35b66fa40a0c348abb03","createdAt":"2026-10-26T08:13:08.000Z","demo":true},{"code":"bharas044","name":"Bharath (demo)","firstName":"Bharath","college":"VIT-AP University","branch":"Civil","source":"ambassador","referredBy":"rahulvm","phoneHash":"2b49ed38eeda474b0a491b0f","createdAt":"2026-10-26T08:17:16.000Z","demo":true},{"code":"bhavys072","name":"Bhavya (demo)","firstName":"Bhavya","college":"SRM University AP","branch":"Civil","source":"placement","referredBy":"srmplace","phoneHash":"b9c6797010c345ee8961f6d8","createdAt":"2026-10-26T08:23:43.000Z","demo":true},{"code":"chaits133","name":"Chaitanya (demo)","firstName":"Chaitanya","college":"KL University","branch":"Mechanical","source":"ambassador","referredBy":"priyakq","phoneHash":"6ba758a6a221f2999b31a01e","createdAt":"2026-10-26T08:34:26.000Z","demo":true},{"code":"jahnas025","name":"Jahnavi (demo)","firstName":"Jahnavi","college":"KL University","branch":"EEE","source":"placement","referredBy":"klplace","phoneHash":"4dad64188cb8db643ff5e6be","createdAt":"2026-10-26T08:37:46.000Z","demo":true},{"code":"ashas045","name":"Asha (demo)","firstName":"Asha","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"a79c23472112099bf0160a2b","createdAt":"2026-10-26T08:39:02.000Z","demo":true},{"code":"ramyas031","name":"Ramya (demo)","firstName":"Ramya","college":"KL University","branch":"Mechanical","source":"ambassador","referredBy":"priyakq","phoneHash":"367806bd32cb639f97482862","createdAt":"2026-10-26T08:39:26.000Z","demo":true},{"code":"tejass103","name":"Tejaswi (demo)","firstName":"Tejaswi","college":"SRM University AP","branch":"CSE","source":"direct","referredBy":null,"phoneHash":"c4693cfeb69201ecad7c0404","createdAt":"2026-10-26T08:48:29.000Z","demo":true},{"code":"pavans130","name":"Pavani (demo)","firstName":"Pavani","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"589de643b8c68845bc354fd7","createdAt":"2026-10-26T08:50:12.000Z","demo":true},{"code":"ishits117","name":"Ishita (demo)","firstName":"Ishita","college":"VIT-AP University","branch":"EEE","source":"ambassador","referredBy":"rahulvm","phoneHash":"4890dff939921f6ab45df620","createdAt":"2026-10-26T08:55:30.000Z","demo":true},{"code":"praves024","name":"Praveen (demo)","firstName":"Praveen","college":"RVR & JC College","branch":"Civil","source":"ambassador","referredBy":"rahulvm","phoneHash":"33bf7c197baf82141e754cae","createdAt":"2026-10-26T08:57:20.000Z","demo":true},{"code":"ramyas151","name":"Ramya (demo)","firstName":"Ramya","college":"SRM University AP","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"18ee0b822066ff24af7e2aa8","createdAt":"2026-10-26T09:09:39.000Z","demo":true},{"code":"siddhs032","name":"Siddharth (demo)","firstName":"Siddharth","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"75cf3b4c06e1e0bdd7b58fe4","createdAt":"2026-10-26T09:13:55.000Z","demo":true},{"code":"deepis082","name":"Deepika (demo)","firstName":"Deepika","college":"JNTU Kakinada","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"62ff22c1f5a6665e1a886b30","createdAt":"2026-10-26T09:17:47.000Z","demo":true},{"code":"nikhis071","name":"Nikhil (demo)","firstName":"Nikhil","college":"KL University","branch":"EEE","source":"screens","referredBy":null,"phoneHash":"c68377bf68f6c438ac17eb12","createdAt":"2026-10-26T09:23:53.000Z","demo":true},{"code":"navyas080","name":"Navya (demo)","firstName":"Navya","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"a0ed6efbbe71fb4056e48d5d","createdAt":"2026-10-26T09:37:34.000Z","demo":true},{"code":"vamsis005","name":"Vamsi (demo)","firstName":"Vamsi","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"c5ef56821a540dc39d22858f","createdAt":"2026-10-26T09:39:06.000Z","demo":true},{"code":"sindhs138","name":"Sindhu (demo)","firstName":"Sindhu","college":"VIT-AP University","branch":"Mechanical","source":"placement","referredBy":"klplace","phoneHash":"de3c164a9956b7b120391d39","createdAt":"2026-10-26T09:42:25.000Z","demo":true},{"code":"praves084","name":"Praveen (demo)","firstName":"Praveen","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"779ff6e36fa162c90f9b6bed","createdAt":"2026-10-26T09:47:52.000Z","demo":true},{"code":"suryas026","name":"Surya (demo)","firstName":"Surya","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"c9c6cf63380c12eaa5c717c3","createdAt":"2026-10-26T09:51:57.000Z","demo":true},{"code":"meghas076","name":"Meghana (demo)","firstName":"Meghana","college":"KL University","branch":"Mechanical","source":"ambassador","referredBy":"priyakq","phoneHash":"865794f660227f87edb25a84","createdAt":"2026-10-26T10:05:48.000Z","demo":true},{"code":"ananys055","name":"Ananya (demo)","firstName":"Ananya","college":"KL University","branch":"EEE","source":"ambassador","referredBy":"priyakq","phoneHash":"5114fc87989b9a801c842eb8","createdAt":"2026-10-26T10:41:53.000Z","demo":true},{"code":"kirans120","name":"Kiran (demo)","firstName":"Kiran","college":"VIT-AP University","branch":"IT","source":"ambassador","referredBy":"rahulvm","phoneHash":"34aa10ca71e43f72814c240f","createdAt":"2026-10-26T10:49:20.000Z","demo":true},{"code":"gopis030","name":"Gopi (demo)","firstName":"Gopi","college":"VIT-AP University","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"b4b8a125db40f652069892e2","createdAt":"2026-10-26T10:52:15.000Z","demo":true},{"code":"swaths134","name":"Swathi (demo)","firstName":"Swathi","college":"KL University","branch":"EEE","source":"referral","referredBy":"chaits133","phoneHash":"cab3dc98ad8a1d93c3f38853","createdAt":"2026-10-26T10:53:19.000Z","demo":true},{"code":"navees042","name":"Naveen (demo)","firstName":"Naveen","college":"RVR & JC College","branch":"ECE","source":"influencer","referredBy":"tejacl","phoneHash":"e6120be71fb234f452c45cbc","createdAt":"2026-10-26T11:15:32.000Z","demo":true},{"code":"sindhs078","name":"Sindhu (demo)","firstName":"Sindhu","college":"VIT-AP University","branch":"IT","source":"ambassador","referredBy":"rahulvm","phoneHash":"df1799aa07cd46cd59b98038","createdAt":"2026-10-26T11:33:03.000Z","demo":true},{"code":"krishs046","name":"Krishna (demo)","firstName":"Krishna","college":"KL University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"d87fcd170a53adb4e5810041","createdAt":"2026-10-26T11:34:17.000Z","demo":true},{"code":"jahnas085","name":"Jahnavi (demo)","firstName":"Jahnavi","college":"KL University","branch":"Mechanical","source":"ambassador","referredBy":"priyakq","phoneHash":"27d4c615bc7b32a2367f2d24","createdAt":"2026-10-26T11:45:14.000Z","demo":true},{"code":"hemas097","name":"Hema (demo)","firstName":"Hema","college":"JNTU Kakinada","branch":"Civil","source":"placement","referredBy":"klplace","phoneHash":"6f657f464a678c6878f6f2db","createdAt":"2026-10-26T11:47:10.000Z","demo":true},{"code":"vamsis125","name":"Vamsi (demo)","firstName":"Vamsi","college":"VIT-AP University","branch":"IT","source":"ambassador","referredBy":"rahulvm","phoneHash":"83853932849584ccbd212b84","createdAt":"2026-10-26T11:52:58.000Z","demo":true},{"code":"nikhis131","name":"Nikhil (demo)","firstName":"Nikhil","college":"SRM University AP","branch":"CSE","source":"referral","referredBy":"bhavys072","phoneHash":"0d28b214bd1abb2b79e2fd2d","createdAt":"2026-10-26T11:58:43.000Z","demo":true},{"code":"hariks147","name":"Harika (demo)","firstName":"Harika","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"dc3914ce8a4cbef0daeaae20","createdAt":"2026-10-26T12:12:12.000Z","demo":true},{"code":"divyas062","name":"Divya (demo)","firstName":"Divya","college":"Andhra University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"94a54c43339f137541cb7a12","createdAt":"2026-10-26T12:13:58.000Z","demo":true},{"code":"charas040","name":"Charan (demo)","firstName":"Charan","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"7187ca0a389a360a31e34d17","createdAt":"2026-10-26T12:17:39.000Z","demo":true},{"code":"arjuns135","name":"Arjun (demo)","firstName":"Arjun","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"d84ff07065c3d32883079851","createdAt":"2026-10-26T12:25:04.000Z","demo":true},{"code":"lakshs006","name":"Lakshmi (demo)","firstName":"Lakshmi","college":"KL University","branch":"CSE","source":"referral","referredBy":"chaits133","phoneHash":"1fc6480269f92f760935fa94","createdAt":"2026-10-26T12:28:25.000Z","demo":true},{"code":"aditys056","name":"Aditya (demo)","firstName":"Aditya","college":"SRM University AP","branch":"IT","source":"influencer","referredBy":"tejacl","phoneHash":"8411630085287dc5dd1e4d74","createdAt":"2026-10-26T12:35:48.000Z","demo":true},{"code":"deepis142","name":"Deepika (demo)","firstName":"Deepika","college":"GITAM University","branch":"Mechanical","source":"placement","referredBy":"klplace","phoneHash":"fdb1ab7c9a056a5cb8b2443a","createdAt":"2026-10-26T12:36:07.000Z","demo":true},{"code":"mounis149","name":"Mounika (demo)","firstName":"Mounika","college":"JNTU Kakinada","branch":"EEE","source":"placement","referredBy":"klplace","phoneHash":"0831c890125fb5b6d3e8c3bf","createdAt":"2026-10-26T12:36:30.000Z","demo":true},{"code":"ravis127","name":"Ravi (demo)","firstName":"Ravi","college":"SRM University AP","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"0386f0949ff9609788e65ef2","createdAt":"2026-10-26T12:39:45.000Z","demo":true},{"code":"sahits101","name":"Sahithi (demo)","firstName":"Sahithi","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"9e86f78d3289925877864db1","createdAt":"2026-10-26T12:46:07.000Z","demo":true},{"code":"hemas037","name":"Hema (demo)","firstName":"Hema","college":"SRM University AP","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"6b1b2501a9cf27245b15f9ae","createdAt":"2026-10-26T12:46:08.000Z","demo":true},{"code":"charas100","name":"Charan (demo)","firstName":"Charan","college":"JNTU Kakinada","branch":"Mechanical","source":"screens","referredBy":null,"phoneHash":"b98efe37f3c6c65547b9962d","createdAt":"2026-10-26T12:56:03.000Z","demo":true},{"code":"anushs064","name":"Anusha (demo)","firstName":"Anusha","college":"VIT-AP University","branch":"ECE","source":"direct","referredBy":null,"phoneHash":"df5bf62901fa2d86fd4ecf62","createdAt":"2026-10-26T12:56:09.000Z","demo":true},{"code":"manojs009","name":"Manoj (demo)","firstName":"Manoj","college":"SRM University AP","branch":"Civil","source":"placement","referredBy":"srmplace","phoneHash":"925bbaf6094520d2f1a3c31b","createdAt":"2026-10-26T12:57:21.000Z","demo":true},{"code":"sais121","name":"Sai (demo)","firstName":"Sai","college":"KL University","branch":"IT","source":"referral","referredBy":"siddhs032","phoneHash":"6a9bb3d92a50a675f6e57724","createdAt":"2026-10-26T12:58:55.000Z","demo":true},{"code":"rohits137","name":"Rohit (demo)","firstName":"Rohit","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"2de964ac65c1387deb729cd4","createdAt":"2026-10-26T13:04:43.000Z","demo":true},{"code":"varuns083","name":"Varun (demo)","firstName":"Varun","college":"SRM University AP","branch":"IT","source":"placement","referredBy":"srmplace","phoneHash":"3ac3226835c1457259f3a0e6","createdAt":"2026-10-26T13:05:01.000Z","demo":true},{"code":"ashas105","name":"Asha (demo)","firstName":"Asha","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"162be8c7da752f2b5d373089","createdAt":"2026-10-26T13:06:12.000Z","demo":true},{"code":"krishs106","name":"Krishna (demo)","firstName":"Krishna","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"2fa19a7c8ceeed8a613495dd","createdAt":"2026-10-26T13:13:37.000Z","demo":true},{"code":"mahess050","name":"Mahesh (demo)","firstName":"Mahesh","college":"SRM University AP","branch":"IT","source":"referral","referredBy":"tejass103","phoneHash":"c4a1a7e906e656495d4a5f65","createdAt":"2026-10-26T13:21:31.000Z","demo":true},{"code":"taruns034","name":"Tarun (demo)","firstName":"Tarun","college":"VIT-AP University","branch":"Civil","source":"referral","referredBy":"bharas044","phoneHash":"cf569a25a69d158f2a8ee1a0","createdAt":"2026-10-26T13:28:08.000Z","demo":true},{"code":"yamins033","name":"Yamini (demo)","firstName":"Yamini","college":"SRM University AP","branch":"CSE","source":"influencer","referredBy":"tejacl","phoneHash":"9c2d028856f2de790a5f98b3","createdAt":"2026-10-26T13:33:09.000Z","demo":true},{"code":"sindhs018","name":"Sindhu (demo)","firstName":"Sindhu","college":"KL University","branch":"Mechanical","source":"ambassador","referredBy":"priyakq","phoneHash":"7943dfabe1a8c2a871a1074c","createdAt":"2026-10-26T13:33:18.000Z","demo":true},{"code":"sandes112","name":"Sandeep (demo)","firstName":"Sandeep","college":"SRM University AP","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"ca9d43c0815cc08aab5c0b64","createdAt":"2026-10-26T13:42:35.000Z","demo":true},{"code":"vamsis065","name":"Vamsi (demo)","firstName":"Vamsi","college":"GITAM University","branch":"EEE","source":"influencer","referredBy":"keerthig","phoneHash":"0bfe768d2a3f5a0ff00bbc10","createdAt":"2026-10-26T13:42:46.000Z","demo":true},{"code":"venkas036","name":"Venkat (demo)","firstName":"Venkat","college":"GITAM University","branch":"IT","source":"ambassador","referredBy":"rahulvm","phoneHash":"7024d28266071f24d70ceffb","createdAt":"2026-10-26T13:49:47.000Z","demo":true},{"code":"abhins088","name":"Abhinav (demo)","firstName":"Abhinav","college":"SRM University AP","branch":"IT","source":"influencer","referredBy":"tejacl","phoneHash":"ddea9e31f8f72c183de42eaa","createdAt":"2026-10-26T13:51:21.000Z","demo":true},{"code":"lakshs066","name":"Lakshmi (demo)","firstName":"Lakshmi","college":"JNTU Kakinada","branch":"EEE","source":"screens","referredBy":null,"phoneHash":"f201241deeda99438436c97d","createdAt":"2026-10-26T13:58:07.000Z","demo":true},{"code":"geeths109","name":"Geetha (demo)","firstName":"Geetha","college":"KL University","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"a7ff9a5ee8b7bdea538a1900","createdAt":"2026-10-26T14:11:58.000Z","demo":true},{"code":"poojas099","name":"Pooja (demo)","firstName":"Pooja","college":"SRM University AP","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"29da862d1df5827e95d726d3","createdAt":"2026-10-26T14:27:33.000Z","demo":true},{"code":"meghas016","name":"Meghana (demo)","firstName":"Meghana","college":"SRM University AP","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"c5c225d4f8bdd73e1ee57522","createdAt":"2026-10-26T14:31:26.000Z","demo":true},{"code":"ishits057","name":"Ishita (demo)","firstName":"Ishita","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"229fdcd6c344271be102b2bc","createdAt":"2026-10-26T14:41:23.000Z","demo":true},{"code":"hariks027","name":"Harika (demo)","firstName":"Harika","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"ce90ed51dfd58d0e895cb4ab","createdAt":"2026-10-26T14:46:30.000Z","demo":true},{"code":"varuns023","name":"Varun (demo)","firstName":"Varun","college":"SRM University AP","branch":"Civil","source":"influencer","referredBy":"tejacl","phoneHash":"978bdbcde1444c91de13fe98","createdAt":"2026-10-26T14:48:43.000Z","demo":true},{"code":"ramyas091","name":"Ramya (demo)","firstName":"Ramya","college":"SRM University AP","branch":"EEE","source":"influencer","referredBy":"tejacl","phoneHash":"ab4ca9b64aba9d286f17f1e2","createdAt":"2026-10-26T14:48:52.000Z","demo":true},{"code":"prakas054","name":"Prakash (demo)","firstName":"Prakash","college":"VIT-AP University","branch":"EEE","source":"screens","referredBy":null,"phoneHash":"e3c63f113dccfa351b1a6ff3","createdAt":"2026-10-26T14:51:09.000Z","demo":true},{"code":"chaits013","name":"Chaitanya (demo)","firstName":"Chaitanya","college":"RVR & JC College","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"2af50b17765dc391e3fe7a94","createdAt":"2026-10-26T14:59:10.000Z","demo":true},{"code":"venkas096","name":"Venkat (demo)","firstName":"Venkat","college":"VVIT","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"e8a5f04feee449ca429dd96a","createdAt":"2026-10-26T14:59:26.000Z","demo":true},{"code":"ajays038","name":"Ajay (demo)","firstName":"Ajay","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"8943fd7ec71fec4c69cb090d","createdAt":"2026-10-26T15:07:32.000Z","demo":true},{"code":"swaths014","name":"Swathi (demo)","firstName":"Swathi","college":"VIT-AP University","branch":"Mechanical","source":"ambassador","referredBy":"rahulvm","phoneHash":"a58811dd1ed40b83165a1e63","createdAt":"2026-10-26T15:10:54.000Z","demo":true},{"code":"diness108","name":"Dinesh (demo)","firstName":"Dinesh","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"38cd754e84d3d8d02580ef7c","createdAt":"2026-10-26T15:11:57.000Z","demo":true},{"code":"manojs069","name":"Manoj (demo)","firstName":"Manoj","college":"SRM University AP","branch":"Civil","source":"influencer","referredBy":"tejacl","phoneHash":"2efecd6bf981fc33139bc333","createdAt":"2026-10-26T15:20:14.000Z","demo":true},{"code":"lasyas053","name":"Lasya (demo)","firstName":"Lasya","college":"GITAM University","branch":"ECE","source":"influencer","referredBy":"keerthig","phoneHash":"7699c07c6baabc2384d8611f","createdAt":"2026-10-26T15:27:47.000Z","demo":true},{"code":"geeths049","name":"Geetha (demo)","firstName":"Geetha","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"afe4466f4104bf138ef1a04a","createdAt":"2026-10-26T15:30:22.000Z","demo":true},{"code":"mounis089","name":"Mounika (demo)","firstName":"Mounika","college":"Andhra University","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"5615a55a3c2e4d993431ed0e","createdAt":"2026-10-26T15:31:34.000Z","demo":true},{"code":"sravas068","name":"Sravani (demo)","firstName":"Sravani","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"c5202adc283f1e02ce419f0f","createdAt":"2026-10-26T15:33:51.000Z","demo":true},{"code":"likits035","name":"Likitha (demo)","firstName":"Likitha","college":"SRM University AP","branch":"Civil","source":"referral","referredBy":"karths021","phoneHash":"3b7321b58bc8b3e23ef9e7d6","createdAt":"2026-10-26T15:38:16.000Z","demo":true},{"code":"meghas136","name":"Meghana (demo)","firstName":"Meghana","college":"JNTU Kakinada","branch":"CSE","source":"direct","referredBy":null,"phoneHash":"f4a8af23614771bcc91e75e2","createdAt":"2026-10-26T15:42:45.000Z","demo":true},{"code":"sravas128","name":"Sravani (demo)","firstName":"Sravani","college":"RVR & JC College","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"e23195b749e4fac828c24e35","createdAt":"2026-10-26T15:44:29.000Z","demo":true},{"code":"kavyas118","name":"Kavya (demo)","firstName":"Kavya","college":"KL University","branch":"Civil","source":"screens","referredBy":null,"phoneHash":"b92d57c194b089e22153e8fc","createdAt":"2026-10-26T15:50:15.000Z","demo":true},{"code":"sandes052","name":"Sandeep (demo)","firstName":"Sandeep","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"05e100ec214440dc5886ff6b","createdAt":"2026-10-26T15:51:52.000Z","demo":true},{"code":"gopis150","name":"Gopi (demo)","firstName":"Gopi","college":"Andhra University","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"e4b931fc4d2d862deecb0c48","createdAt":"2026-10-26T15:52:24.000Z","demo":true},{"code":"lasyas113","name":"Lasya (demo)","firstName":"Lasya","college":"VIT-AP University","branch":"Civil","source":"ambassador","referredBy":"rahulvm","phoneHash":"18150557cebafebef7e7672d","createdAt":"2026-10-26T15:55:14.000Z","demo":true},{"code":"kavyas058","name":"Kavya (demo)","firstName":"Kavya","college":"KL University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"962fd237933c8a629faf7ae2","createdAt":"2026-10-26T15:56:20.000Z","demo":true},{"code":"divyas002","name":"Divya (demo)","firstName":"Divya","college":"VVIT","branch":"Mechanical","source":"ambassador","referredBy":"priyakq","phoneHash":"d2bfc8025ea4935a806fc25e","createdAt":"2026-10-26T16:04:24.000Z","demo":true},{"code":"rakess059","name":"Rakesh (demo)","firstName":"Rakesh","college":"SRM University AP","branch":"Mechanical","source":"placement","referredBy":"srmplace","phoneHash":"28778b026dc2c5c5bb1de517","createdAt":"2026-10-26T16:05:27.000Z","demo":true},{"code":"arjuns075","name":"Arjun (demo)","firstName":"Arjun","college":"SRM University AP","branch":"IT","source":"influencer","referredBy":"tejacl","phoneHash":"1773e6f7d4f65b35cc054115","createdAt":"2026-10-26T16:09:53.000Z","demo":true},{"code":"diness048","name":"Dinesh (demo)","firstName":"Dinesh","college":"SRM University AP","branch":"EEE","source":"placement","referredBy":"srmplace","phoneHash":"8e8858c5d04a52ac830a9429","createdAt":"2026-10-26T16:15:40.000Z","demo":true},{"code":"rohits017","name":"Rohit (demo)","firstName":"Rohit","college":"GITAM University","branch":"ECE","source":"influencer","referredBy":"keerthig","phoneHash":"3b5e3ee450c0218bff0c6aee","createdAt":"2026-10-26T16:25:38.000Z","demo":true},{"code":"harshs123","name":"Harsha (demo)","firstName":"Harsha","college":"VIT-AP University","branch":"IT","source":"ambassador","referredBy":"rahulvm","phoneHash":"d3ad9315b7be5dd53b31a273","createdAt":"2026-10-26T16:34:03.000Z","demo":true},{"code":"pavans010","name":"Pavani (demo)","firstName":"Pavani","college":"KL University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"6d99b031b1c70cf85b0ba334","createdAt":"2026-10-26T16:36:54.000Z","demo":true},{"code":"bhavys012","name":"Bhavya (demo)","firstName":"Bhavya","college":"VIT-AP University","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"e6cd11dc3cba7b69c6d72d3d","createdAt":"2026-10-26T16:38:42.000Z","demo":true},{"code":"arjuns015","name":"Arjun (demo)","firstName":"Arjun","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"9c9faad5c6a200ed458b3b33","createdAt":"2026-10-26T16:39:38.000Z","demo":true},{"code":"taruns094","name":"Tarun (demo)","firstName":"Tarun","college":"SRM University AP","branch":"EEE","source":"referral","referredBy":"prakas114","phoneHash":"41f63290cd6cbe6609e06044","createdAt":"2026-10-26T16:40:01.000Z","demo":true},{"code":"jahnas145","name":"Jahnavi (demo)","firstName":"Jahnavi","college":"VIT-AP University","branch":"EEE","source":"ambassador","referredBy":"rahulvm","phoneHash":"e8783e0c7518665b7b2f4d91","createdAt":"2026-10-26T16:47:19.000Z","demo":true},{"code":"ananys115","name":"Ananya (demo)","firstName":"Ananya","college":"KL University","branch":"ECE","source":"referral","referredBy":"jahnas025","phoneHash":"ebff1068ab77c00d8cab8dec","createdAt":"2026-10-26T16:50:33.000Z","demo":true},{"code":"deepis022","name":"Deepika (demo)","firstName":"Deepika","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"c8eb6699bb981d0ae6b85989","createdAt":"2026-10-26T17:02:40.000Z","demo":true},{"code":"praves144","name":"Praveen (demo)","firstName":"Praveen","college":"SRM University AP","branch":"Civil","source":"placement","referredBy":"srmplace","phoneHash":"798c5bfff3296fe36aadf1df","createdAt":"2026-10-26T17:09:18.000Z","demo":true},{"code":"akhils079","name":"Akhil (demo)","firstName":"Akhil","college":"SRM University AP","branch":"Civil","source":"influencer","referredBy":"tejacl","phoneHash":"92624d43f95fe37f5ca69407","createdAt":"2026-10-26T17:18:01.000Z","demo":true},{"code":"chaits073","name":"Chaitanya (demo)","firstName":"Chaitanya","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"b3acc20a4d6277ca442ec642","createdAt":"2026-10-26T17:24:50.000Z","demo":true},{"code":"bharas104","name":"Bharath (demo)","firstName":"Bharath","college":"KL University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"9a8c93fee5bf5b3b9ae7a642","createdAt":"2026-10-26T17:30:58.000Z","demo":true},{"code":"revats107","name":"Revathi (demo)","firstName":"Revathi","college":"VVIT","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"e1487f38bd55d4ca94da2e76","createdAt":"2026-10-26T17:45:30.000Z","demo":true},{"code":"anushs124","name":"Anusha (demo)","firstName":"Anusha","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"bab26e4e66a8ceef5b6c24d8","createdAt":"2026-10-26T17:49:11.000Z","demo":true},{"code":"rakess119","name":"Rakesh (demo)","firstName":"Rakesh","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"b89858ccdd2accac8683b6dc","createdAt":"2026-10-26T17:55:10.000Z","demo":true},{"code":"tejass043","name":"Tejaswi (demo)","firstName":"Tejaswi","college":"VIT-AP University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"11b7110b31f172b5e823245f","createdAt":"2026-10-26T18:02:40.000Z","demo":true},{"code":"navees102","name":"Naveen (demo)","firstName":"Naveen","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"0154890f12748a375a9a4ed1","createdAt":"2026-10-26T18:09:49.000Z","demo":true},{"code":"ajays098","name":"Ajay (demo)","firstName":"Ajay","college":"SRM University AP","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"9b97f046970527a91fd148b6","createdAt":"2026-10-26T18:10:20.000Z","demo":true},{"code":"harshs003","name":"Harsha (demo)","firstName":"Harsha","college":"VIT-AP University","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"ed882b45e7d23de0772cdb60","createdAt":"2026-10-26T18:13:44.000Z","demo":true},{"code":"akhils019","name":"Akhil (demo)","firstName":"Akhil","college":"SRM University AP","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"137ea259a73e7a71aee6e62d","createdAt":"2026-10-26T18:17:35.000Z","demo":true},{"code":"sahits041","name":"Sahithi (demo)","firstName":"Sahithi","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"733048f3bfcef0140a06ade0","createdAt":"2026-10-26T18:17:48.000Z","demo":true},{"code":"kirans000","name":"Kiran (demo)","firstName":"Kiran","college":"SRM University AP","branch":"ECE","source":"referral","referredBy":"tejass103","phoneHash":"1d6875ee4127775f9b845ecb","createdAt":"2026-10-26T18:19:21.000Z","demo":true},{"code":"sais001","name":"Sai (demo)","firstName":"Sai","college":"GITAM University","branch":"IT","source":"influencer","referredBy":"keerthig","phoneHash":"61ea51136a1eb39db39c889c","createdAt":"2026-10-26T18:25:36.000Z","demo":true},{"code":"navyas140","name":"Navya (demo)","firstName":"Navya","college":"SRM University AP","branch":"Civil","source":"placement","referredBy":"srmplace","phoneHash":"7793d8b720c3a742212ea993","createdAt":"2026-10-26T18:28:00.000Z","demo":true},{"code":"nikhis011","name":"Nikhil (demo)","firstName":"Nikhil","college":"KL University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"65d5862b4810a00b57a6457f","createdAt":"2026-10-26T18:28:51.000Z","demo":true},{"code":"mahess110","name":"Mahesh (demo)","firstName":"Mahesh","college":"SRM University AP","branch":"Mechanical","source":"influencer","referredBy":"tejacl","phoneHash":"d1a791ec38880b5dcf9627d5","createdAt":"2026-10-26T18:35:52.000Z","demo":true},{"code":"navyas020","name":"Navya (demo)","firstName":"Navya","college":"SRM University AP","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"e3df693a45dd80d53a4d2f56","createdAt":"2026-10-26T18:45:47.000Z","demo":true},{"code":"divyas122","name":"Divya (demo)","firstName":"Divya","college":"VVIT","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"1e263650bf357d366185e9b4","createdAt":"2026-10-26T18:47:39.000Z","demo":true},{"code":"likits095","name":"Likitha (demo)","firstName":"Likitha","college":"GITAM University","branch":"CSE","source":"influencer","referredBy":"keerthig","phoneHash":"2e053621c0eafb90717eed6e","createdAt":"2026-10-26T19:00:51.000Z","demo":true},{"code":"abhins148","name":"Abhinav (demo)","firstName":"Abhinav","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"7731581240718fdad67fca51","createdAt":"2026-10-26T19:07:21.000Z","demo":true},{"code":"harshs063","name":"Harsha (demo)","firstName":"Harsha","college":"SRM University AP","branch":"EEE","source":"placement","referredBy":"srmplace","phoneHash":"5be9dafae42111bfbfd4acc5","createdAt":"2026-10-26T19:19:31.000Z","demo":true},{"code":"ravis067","name":"Ravi (demo)","firstName":"Ravi","college":"SRM University AP","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"ffe32a148d85906dbba279c4","createdAt":"2026-10-26T19:28:36.000Z","demo":true},{"code":"swaths074","name":"Swathi (demo)","firstName":"Swathi","college":"KL University","branch":"Civil","source":"placement","referredBy":"klplace","phoneHash":"49223fd6e1ec7375eafd9de0","createdAt":"2026-10-26T19:36:23.000Z","demo":true},{"code":"manojs129","name":"Manoj (demo)","firstName":"Manoj","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"2ef37a7f184eb1b2cd4d8352","createdAt":"2026-10-26T19:37:34.000Z","demo":true},{"code":"gopis090","name":"Gopi (demo)","firstName":"Gopi","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"0f1b44843b1a484fae10bbce","createdAt":"2026-10-26T19:39:58.000Z","demo":true},{"code":"karths141","name":"Karthik (demo)","firstName":"Karthik","college":"KL University","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"ec00c75232d452ee86115099","createdAt":"2026-10-26T19:45:30.000Z","demo":true},{"code":"akhils139","name":"Akhil (demo)","firstName":"Akhil","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"265369956e4920cca0bdec47","createdAt":"2026-10-26T19:50:53.000Z","demo":true},{"code":"pavans070","name":"Pavani (demo)","firstName":"Pavani","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"b41dc1e2d2f4cfc6b197cde7","createdAt":"2026-10-26T19:57:33.000Z","demo":true},{"code":"varuns143","name":"Varun (demo)","firstName":"Varun","college":"SRM University AP","branch":"ECE","source":"influencer","referredBy":"tejacl","phoneHash":"85c230390eabe92761c49415","createdAt":"2026-10-26T20:00:54.000Z","demo":true},{"code":"aditys116","name":"Aditya (demo)","firstName":"Aditya","college":"KL University","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"43c2c7ad8ec000f950cd6c0d","createdAt":"2026-10-26T20:03:42.000Z","demo":true},{"code":"revats047","name":"Revathi (demo)","firstName":"Revathi","college":"VIT-AP University","branch":"IT","source":"ambassador","referredBy":"rahulvm","phoneHash":"6af2a4f39a0fedfa0dfe7e69","createdAt":"2026-10-26T20:05:58.000Z","demo":true},{"code":"ravis007","name":"Ravi (demo)","firstName":"Ravi","college":"KL University","branch":"Civil","source":"referral","referredBy":"pavans130","phoneHash":"def4a0b021463baf249ed739","createdAt":"2026-10-26T20:12:41.000Z","demo":true},{"code":"abhins028","name":"Abhinav (demo)","firstName":"Abhinav","college":"SRM University AP","branch":"CSE","source":"referral","referredBy":"karths021","phoneHash":"6c96e7ba9d83236939d52152","createdAt":"2026-10-26T20:15:02.000Z","demo":true},{"code":"suryas146","name":"Surya (demo)","firstName":"Surya","college":"VIT-AP University","branch":"CSE","source":"referral","referredBy":"ishits117","phoneHash":"9008abfb50e3eefb19741266","createdAt":"2026-10-26T20:25:35.000Z","demo":true},{"code":"anushs004","name":"Anusha (demo)","firstName":"Anusha","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"3a5c1f2b33c2418a56ef52c4","createdAt":"2026-10-26T20:25:36.000Z","demo":true},{"code":"hariks087","name":"Harika (demo)","firstName":"Harika","college":"KL University","branch":"EEE","source":"referral","referredBy":"chaits133","phoneHash":"a270504de24cc929a07adf17","createdAt":"2026-10-26T20:29:25.000Z","demo":true},{"code":"poojas039","name":"Pooja (demo)","firstName":"Pooja","college":"KL University","branch":"EEE","source":"ambassador","referredBy":"priyakq","phoneHash":"64c9b889f350ab66d959a426","createdAt":"2026-10-26T20:32:39.000Z","demo":true},{"code":"karths081","name":"Karthik (demo)","firstName":"Karthik","college":"KL University","branch":"EEE","source":"ambassador","referredBy":"priyakq","phoneHash":"5c96fdd0b6c5ca1ba451d17b","createdAt":"2026-10-26T20:34:05.000Z","demo":true},{"code":"mounis029","name":"Mounika (demo)","firstName":"Mounika","college":"KL University","branch":"Mechanical","source":"ambassador","referredBy":"priyakq","phoneHash":"49efea2cccf88ed933faabc2","createdAt":"2026-10-26T20:46:58.000Z","demo":true},{"code":"bhavys132","name":"Bhavya (demo)","firstName":"Bhavya","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"77d63adc1c40dae86bcb4308","createdAt":"2026-10-26T20:52:28.000Z","demo":true},{"code":"suryas086","name":"Surya (demo)","firstName":"Surya","college":"SRM University AP","branch":"EEE","source":"placement","referredBy":"srmplace","phoneHash":"1ac394875bc85ae81def3c1a","createdAt":"2026-10-26T20:58:33.000Z","demo":true},{"code":"siddhs092","name":"Siddharth (demo)","firstName":"Siddharth","college":"SRM University AP","branch":"Civil","source":"placement","referredBy":"srmplace","phoneHash":"7f3f06bac42da53140594f6c","createdAt":"2026-10-26T21:00:51.000Z","demo":true},{"code":"yamins093","name":"Yamini (demo)","firstName":"Yamini","college":"SRM University AP","branch":"Mechanical","source":"placement","referredBy":"srmplace","phoneHash":"cc84efbd525c353192755070","createdAt":"2026-10-26T21:05:56.000Z","demo":true},{"code":"lakshs126","name":"Lakshmi (demo)","firstName":"Lakshmi","college":"SRM University AP","branch":"EEE","source":"placement","referredBy":"srmplace","phoneHash":"90844da86fea9cd27033eb0a","createdAt":"2026-10-26T21:08:05.000Z","demo":true},{"code":"bindus111","name":"Bindu (demo)","firstName":"Bindu","college":"VIT-AP University","branch":"Civil","source":"ambassador","referredBy":"rahulvm","phoneHash":"94b51c86cc51ecdedd2a448a","createdAt":"2026-10-26T21:16:31.000Z","demo":true},{"code":"rohits077","name":"Rohit (demo)","firstName":"Rohit","college":"SRM University AP","branch":"CSE","source":"direct","referredBy":null,"phoneHash":"91eb822184dd8da4d43f5af4","createdAt":"2026-10-26T21:18:51.000Z","demo":true},{"code":"kirans060","name":"Kiran (demo)","firstName":"Kiran","college":"KL University","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"eec688caeba48ddbc333410c","createdAt":"2026-10-26T21:43:29.000Z","demo":true},{"code":"sais061","name":"Sai (demo)","firstName":"Sai","college":"KL University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"cd9781d0c459617f25e7d84e","createdAt":"2026-10-26T21:49:00.000Z","demo":true},{"code":"bindus051","name":"Bindu (demo)","firstName":"Bindu","college":"KL University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"23828248f897050156178f43","createdAt":"2026-10-26T21:55:04.000Z","demo":true},{"code":"pavans190","name":"Pavani (demo)","firstName":"Pavani","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"55e451e20485c4f346ea1cbd","createdAt":"2026-10-27T08:09:33.000Z","demo":true},{"code":"hemas217","name":"Hema (demo)","firstName":"Hema","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"66eb38ae6c58dfb42089f3ea","createdAt":"2026-10-27T08:18:15.000Z","demo":true},{"code":"varuns203","name":"Varun (demo)","firstName":"Varun","college":"VIT-AP University","branch":"Civil","source":"ambassador","referredBy":"rahulvm","phoneHash":"8bd8e2ba3c002b0bff8a35c2","createdAt":"2026-10-27T08:18:46.000Z","demo":true},{"code":"sahits221","name":"Sahithi (demo)","firstName":"Sahithi","college":"SRM University AP","branch":"Mechanical","source":"ambassador","referredBy":"rahulvm","phoneHash":"a6a16a44ef6395e28f00e393","createdAt":"2026-10-27T08:19:01.000Z","demo":true},{"code":"ajays218","name":"Ajay (demo)","firstName":"Ajay","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"81676528ddd2dc281ca5e5a0","createdAt":"2026-10-27T08:20:11.000Z","demo":true},{"code":"abhins208","name":"Abhinav (demo)","firstName":"Abhinav","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"60ee3f59c8fa64e1845b2fae","createdAt":"2026-10-27T08:30:44.000Z","demo":true},{"code":"ravis247","name":"Ravi (demo)","firstName":"Ravi","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"1e89264f2f2e3b21c4238bf2","createdAt":"2026-10-27T08:39:29.000Z","demo":true},{"code":"diness228","name":"Dinesh (demo)","firstName":"Dinesh","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"1e59ebf9f7a32442451ea351","createdAt":"2026-10-27T08:41:06.000Z","demo":true},{"code":"swaths194","name":"Swathi (demo)","firstName":"Swathi","college":"KL University","branch":"CSE","source":"screens","referredBy":null,"phoneHash":"d8fccc6ce8fb529c270c3ed2","createdAt":"2026-10-27T08:41:50.000Z","demo":true},{"code":"likits155","name":"Likitha (demo)","firstName":"Likitha","college":"VIT-AP University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"bb30f8bee81535c2b1a2fe2e","createdAt":"2026-10-27T09:14:02.000Z","demo":true},{"code":"venkas156","name":"Venkat (demo)","firstName":"Venkat","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"a789fbbc3cfb38aecfbd9ea1","createdAt":"2026-10-27T09:27:26.000Z","demo":true},{"code":"likits215","name":"Likitha (demo)","firstName":"Likitha","college":"VIT-AP University","branch":"IT","source":"ambassador","referredBy":"rahulvm","phoneHash":"a8eaeaa07e9bc1af4e58a1c6","createdAt":"2026-10-27T09:33:50.000Z","demo":true},{"code":"nikhis191","name":"Nikhil (demo)","firstName":"Nikhil","college":"SRM University AP","branch":"IT","source":"placement","referredBy":"srmplace","phoneHash":"0b3906b0036ffb753f9909c3","createdAt":"2026-10-27T09:36:25.000Z","demo":true},{"code":"venkas216","name":"Venkat (demo)","firstName":"Venkat","college":"SRM University AP","branch":"Mechanical","source":"placement","referredBy":"srmplace","phoneHash":"022695b5e6470ff9fdf6609b","createdAt":"2026-10-27T09:56:34.000Z","demo":true},{"code":"yamins153","name":"Yamini (demo)","firstName":"Yamini","college":"KL University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"4875a6a13c349158809776de","createdAt":"2026-10-27T10:12:25.000Z","demo":true},{"code":"manojs189","name":"Manoj (demo)","firstName":"Manoj","college":"VIT-AP University","branch":"Mechanical","source":"ambassador","referredBy":"rahulvm","phoneHash":"30c800e25378cc27aea8592a","createdAt":"2026-10-27T10:12:26.000Z","demo":true},{"code":"anushs244","name":"Anusha (demo)","firstName":"Anusha","college":"KL University","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"bf3d59bb600469b77ae91c3c","createdAt":"2026-10-27T10:18:48.000Z","demo":true},{"code":"charas220","name":"Charan (demo)","firstName":"Charan","college":"RVR & JC College","branch":"ECE","source":"screens","referredBy":null,"phoneHash":"64d2078c7e02bebc6e2bdf6f","createdAt":"2026-10-27T10:22:44.000Z","demo":true},{"code":"rakess239","name":"Rakesh (demo)","firstName":"Rakesh","college":"VIT-AP University","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"13b3bf315db1930c8a40b5ce","createdAt":"2026-10-27T10:40:42.000Z","demo":true},{"code":"kavyas238","name":"Kavya (demo)","firstName":"Kavya","college":"SRM University AP","branch":"ECE","source":"referral","referredBy":"tejass103","phoneHash":"d5a2a4b346a6e41b852a21a3","createdAt":"2026-10-27T10:42:14.000Z","demo":true},{"code":"siddhs152","name":"Siddharth (demo)","firstName":"Siddharth","college":"JNTU Kakinada","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"1acebd56d8fc12091e83c5cd","createdAt":"2026-10-27T10:43:40.000Z","demo":true},{"code":"lakshs246","name":"Lakshmi (demo)","firstName":"Lakshmi","college":"VIT-AP University","branch":"IT","source":"ambassador","referredBy":"rahulvm","phoneHash":"e3179bf71bfb4bb51ee207d9","createdAt":"2026-10-27T10:50:57.000Z","demo":true},{"code":"tejass223","name":"Tejaswi (demo)","firstName":"Tejaswi","college":"VIT-AP University","branch":"Mechanical","source":"referral","referredBy":"ishits117","phoneHash":"200642ddbd70a0324a581977","createdAt":"2026-10-27T10:59:49.000Z","demo":true},{"code":"suryas206","name":"Surya (demo)","firstName":"Surya","college":"VIT-AP University","branch":"Mechanical","source":"ambassador","referredBy":"rahulvm","phoneHash":"5a7c6956d0a7702a5d671d11","createdAt":"2026-10-27T11:07:54.000Z","demo":true},{"code":"vamsis245","name":"Vamsi (demo)","firstName":"Vamsi","college":"GITAM University","branch":"CSE","source":"influencer","referredBy":"keerthig","phoneHash":"5e5608cc096225d321843584","createdAt":"2026-10-27T11:11:17.000Z","demo":true},{"code":"bharas224","name":"Bharath (demo)","firstName":"Bharath","college":"KL University","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"cb37b4da5a9476955c1555cd","createdAt":"2026-10-27T11:12:18.000Z","demo":true},{"code":"ashas225","name":"Asha (demo)","firstName":"Asha","college":"GITAM University","branch":"EEE","source":"influencer","referredBy":"keerthig","phoneHash":"143a49c6dec67a998cd19b9f","createdAt":"2026-10-27T11:20:53.000Z","demo":true},{"code":"hariks207","name":"Harika (demo)","firstName":"Harika","college":"SRM University AP","branch":"Civil","source":"placement","referredBy":"srmplace","phoneHash":"626714a74a424e2d3c2fc14c","createdAt":"2026-10-27T11:32:55.000Z","demo":true},{"code":"chaits193","name":"Chaitanya (demo)","firstName":"Chaitanya","college":"VIT-AP University","branch":"EEE","source":"ambassador","referredBy":"rahulvm","phoneHash":"8c2675292835788d4648e8ae","createdAt":"2026-10-27T11:36:59.000Z","demo":true},{"code":"yamins213","name":"Yamini (demo)","firstName":"Yamini","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"3985c0b0b143e64f0466c70a","createdAt":"2026-10-27T11:41:47.000Z","demo":true},{"code":"harshs183","name":"Harsha (demo)","firstName":"Harsha","college":"VIT-AP University","branch":"EEE","source":"ambassador","referredBy":"rahulvm","phoneHash":"2a5676f7607616b6ff33ab44","createdAt":"2026-10-27T11:48:36.000Z","demo":true},{"code":"prakas234","name":"Prakash (demo)","firstName":"Prakash","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"2777c50b78ec3d4bde82a58f","createdAt":"2026-10-27T12:11:46.000Z","demo":true},{"code":"bharas164","name":"Bharath (demo)","firstName":"Bharath","college":"KL University","branch":"EEE","source":"ambassador","referredBy":"priyakq","phoneHash":"fd79326a0b13b7afed72d555","createdAt":"2026-10-27T12:21:12.000Z","demo":true},{"code":"aditys176","name":"Aditya (demo)","firstName":"Aditya","college":"KL University","branch":"CSE","source":"referral","referredBy":"siddhs032","phoneHash":"0805850254395237e7876f57","createdAt":"2026-10-27T12:29:56.000Z","demo":true},{"code":"ashas165","name":"Asha (demo)","firstName":"Asha","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"999dbf756a629454b79e7f62","createdAt":"2026-10-27T12:41:28.000Z","demo":true},{"code":"divyas182","name":"Divya (demo)","firstName":"Divya","college":"KL University","branch":"EEE","source":"placement","referredBy":"klplace","phoneHash":"2a4456f6f1f9479ded86d904","createdAt":"2026-10-27T12:43:57.000Z","demo":true},{"code":"ravis187","name":"Ravi (demo)","firstName":"Ravi","college":"GITAM University","branch":"Civil","source":"influencer","referredBy":"keerthig","phoneHash":"2313e2479d097ad4b4b3c8b2","createdAt":"2026-10-27T12:48:42.000Z","demo":true},{"code":"ananys175","name":"Ananya (demo)","firstName":"Ananya","college":"KL University","branch":"EEE","source":"ambassador","referredBy":"priyakq","phoneHash":"ba32767337ef2b8e7fd927c3","createdAt":"2026-10-27T13:05:59.000Z","demo":true},{"code":"navees222","name":"Naveen (demo)","firstName":"Naveen","college":"VIT-AP University","branch":"Mechanical","source":"ambassador","referredBy":"rahulvm","phoneHash":"3edc1b6eb5ce9aadb4739370","createdAt":"2026-10-27T13:19:20.000Z","demo":true},{"code":"bhavys192","name":"Bhavya (demo)","firstName":"Bhavya","college":"VVIT","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"6ae2348c20410b3ea0d7265e","createdAt":"2026-10-27T13:33:08.000Z","demo":true},{"code":"bindus231","name":"Bindu (demo)","firstName":"Bindu","college":"Andhra University","branch":"Mechanical","source":"screens","referredBy":null,"phoneHash":"2868598729b00aff4d102495","createdAt":"2026-10-27T13:44:49.000Z","demo":true},{"code":"aditys236","name":"Aditya (demo)","firstName":"Aditya","college":"SRM University AP","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"3f55343d2aefad9b6283dff9","createdAt":"2026-10-27T13:51:42.000Z","demo":true},{"code":"hemas157","name":"Hema (demo)","firstName":"Hema","college":"GITAM University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"4d2cea15428a8a21132d969e","createdAt":"2026-10-27T13:58:52.000Z","demo":true},{"code":"sandes232","name":"Sandeep (demo)","firstName":"Sandeep","college":"Andhra University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"36937b54957d2a76f0e404f3","createdAt":"2026-10-27T14:05:10.000Z","demo":true},{"code":"meghas196","name":"Meghana (demo)","firstName":"Meghana","college":"KL University","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"debe8b3366a4749243446076","createdAt":"2026-10-27T14:31:38.000Z","demo":true},{"code":"harshs243","name":"Harsha (demo)","firstName":"Harsha","college":"VIT-AP University","branch":"CSE","source":"screens","referredBy":null,"phoneHash":"22a8b2101eddc226372ab194","createdAt":"2026-10-27T14:51:36.000Z","demo":true},{"code":"deepis202","name":"Deepika (demo)","firstName":"Deepika","college":"KL University","branch":"EEE","source":"ambassador","referredBy":"priyakq","phoneHash":"54ebcb681928b23f3a59803f","createdAt":"2026-10-27T14:57:01.000Z","demo":true},{"code":"krishs226","name":"Krishna (demo)","firstName":"Krishna","college":"KL University","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"870f22fbd6bf5fbdaf90d0a4","createdAt":"2026-10-27T15:01:11.000Z","demo":true},{"code":"vamsis185","name":"Vamsi (demo)","firstName":"Vamsi","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"7e79e91cdc46557feb7af963","createdAt":"2026-10-27T15:02:25.000Z","demo":true},{"code":"kirans240","name":"Kiran (demo)","firstName":"Kiran","college":"SRM University AP","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"eae73dcdcd8e6f11842508e2","createdAt":"2026-10-27T15:04:28.000Z","demo":true},{"code":"charas160","name":"Charan (demo)","firstName":"Charan","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"d42f6f7205a7f20357605426","createdAt":"2026-10-27T15:21:58.000Z","demo":true},{"code":"rohits197","name":"Rohit (demo)","firstName":"Rohit","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"12ea1c3c88c4f26c7ab6ed2b","createdAt":"2026-10-27T15:22:26.000Z","demo":true},{"code":"prakas174","name":"Prakash (demo)","firstName":"Prakash","college":"SRM University AP","branch":"EEE","source":"referral","referredBy":"ramyas151","phoneHash":"5e7cb2bbf62a76901d7b011e","createdAt":"2026-10-27T15:36:26.000Z","demo":true},{"code":"ishits177","name":"Ishita (demo)","firstName":"Ishita","college":"GITAM University","branch":"ECE","source":"influencer","referredBy":"keerthig","phoneHash":"898c18887166f152ad22a15e","createdAt":"2026-10-27T15:46:08.000Z","demo":true},{"code":"poojas219","name":"Pooja (demo)","firstName":"Pooja","college":"GITAM University","branch":"Civil","source":"influencer","referredBy":"keerthig","phoneHash":"d6a60474c47edbb02b9fb5d9","createdAt":"2026-10-27T15:57:28.000Z","demo":true},{"code":"ajays158","name":"Ajay (demo)","firstName":"Ajay","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"c45656e715622ec84be8ce2d","createdAt":"2026-10-27T16:08:41.000Z","demo":true},{"code":"mahess170","name":"Mahesh (demo)","firstName":"Mahesh","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"7d5eb368750427de16314542","createdAt":"2026-10-27T16:14:22.000Z","demo":true},{"code":"karths201","name":"Karthik (demo)","firstName":"Karthik","college":"VIT-AP University","branch":"Civil","source":"ambassador","referredBy":"rahulvm","phoneHash":"f61f9027588b0fd36ac723d7","createdAt":"2026-10-27T16:21:33.000Z","demo":true},{"code":"krishs166","name":"Krishna (demo)","firstName":"Krishna","college":"KL University","branch":"EEE","source":"placement","referredBy":"klplace","phoneHash":"98094f0ea808539de1d6543c","createdAt":"2026-10-27T16:24:13.000Z","demo":true},{"code":"revats227","name":"Revathi (demo)","firstName":"Revathi","college":"SRM University AP","branch":"ECE","source":"influencer","referredBy":"tejacl","phoneHash":"44fc022db28f71c89dbb5c8b","createdAt":"2026-10-27T16:40:15.000Z","demo":true},{"code":"ananys235","name":"Ananya (demo)","firstName":"Ananya","college":"KL University","branch":"ECE","source":"screens","referredBy":null,"phoneHash":"fac055984171f22e9280bea7","createdAt":"2026-10-27T16:42:18.000Z","demo":true},{"code":"sais241","name":"Sai (demo)","firstName":"Sai","college":"SRM University AP","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"36e4ac3290f2dec59db87dca","createdAt":"2026-10-27T16:58:02.000Z","demo":true},{"code":"mounis209","name":"Mounika (demo)","firstName":"Mounika","college":"Andhra University","branch":"ECE","source":"screens","referredBy":null,"phoneHash":"7603e21d15014b47d461872e","createdAt":"2026-10-27T16:58:15.000Z","demo":true},{"code":"rakess179","name":"Rakesh (demo)","firstName":"Rakesh","college":"KL University","branch":"IT","source":"referral","referredBy":"siddhs032","phoneHash":"8e853a4f270df8a5949cbbb6","createdAt":"2026-10-27T16:58:16.000Z","demo":true},{"code":"sahits161","name":"Sahithi (demo)","firstName":"Sahithi","college":"RVR & JC College","branch":"Civil","source":"placement","referredBy":"srmplace","phoneHash":"2355ecbaeedcc019f737825d","createdAt":"2026-10-27T17:00:46.000Z","demo":true},{"code":"sandes172","name":"Sandeep (demo)","firstName":"Sandeep","college":"GITAM University","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"90326d71468bb5673b965678","createdAt":"2026-10-27T17:01:40.000Z","demo":true},{"code":"taruns214","name":"Tarun (demo)","firstName":"Tarun","college":"VVIT","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"08bcbd5aa787810857bbe5f0","createdAt":"2026-10-27T17:07:57.000Z","demo":true},{"code":"sais181","name":"Sai (demo)","firstName":"Sai","college":"VIT-AP University","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"0aba211f6e6a9f3bebbd2ed1","createdAt":"2026-10-27T17:09:07.000Z","demo":true},{"code":"ishits237","name":"Ishita (demo)","firstName":"Ishita","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"c84cb08be4dbd99218f88e96","createdAt":"2026-10-27T17:33:14.000Z","demo":true},{"code":"kavyas178","name":"Kavya (demo)","firstName":"Kavya","college":"JNTU Kakinada","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"fd5ac8c532defea9dd92c0c9","createdAt":"2026-10-27T17:34:34.000Z","demo":true},{"code":"divyas242","name":"Divya (demo)","firstName":"Divya","college":"SRM University AP","branch":"ECE","source":"referral","referredBy":"tejass103","phoneHash":"4b183dd038d4ad902d7cb966","createdAt":"2026-10-27T17:37:18.000Z","demo":true},{"code":"sravas188","name":"Sravani (demo)","firstName":"Sravani","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"68e535ba7cd9ce68cdf02ba9","createdAt":"2026-10-27T17:37:40.000Z","demo":true},{"code":"navees162","name":"Naveen (demo)","firstName":"Naveen","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"4307c775e8dd6fd0013d5df9","createdAt":"2026-10-27T17:44:20.000Z","demo":true},{"code":"diness168","name":"Dinesh (demo)","firstName":"Dinesh","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"8bb52703f7483dc0ee4b6b6f","createdAt":"2026-10-27T17:45:10.000Z","demo":true},{"code":"bindus171","name":"Bindu (demo)","firstName":"Bindu","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"7d9780fdece4622cef852ddf","createdAt":"2026-10-27T17:45:12.000Z","demo":true},{"code":"gopis210","name":"Gopi (demo)","firstName":"Gopi","college":"VVIT","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"69ba03c9e9dc513ffa8bd7d7","createdAt":"2026-10-27T18:25:15.000Z","demo":true},{"code":"tejass163","name":"Tejaswi (demo)","firstName":"Tejaswi","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"be4aab77652f1ecc29c50a60","createdAt":"2026-10-27T18:38:33.000Z","demo":true},{"code":"praves204","name":"Praveen (demo)","firstName":"Praveen","college":"VIT-AP University","branch":"EEE","source":"ambassador","referredBy":"rahulvm","phoneHash":"119db44ce15b46216d2bb2bd","createdAt":"2026-10-27T19:24:38.000Z","demo":true},{"code":"arjuns195","name":"Arjun (demo)","firstName":"Arjun","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"8c5ac1761a2a7b8dd7eea4c2","createdAt":"2026-10-27T19:42:50.000Z","demo":true},{"code":"geeths229","name":"Geetha (demo)","firstName":"Geetha","college":"SRM University AP","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"9e60dc6057dff538e7a08e1c","createdAt":"2026-10-27T19:52:20.000Z","demo":true},{"code":"ramyas211","name":"Ramya (demo)","firstName":"Ramya","college":"KL University","branch":"EEE","source":"ambassador","referredBy":"priyakq","phoneHash":"bdcdb3698f7565888e779d5c","createdAt":"2026-10-27T19:55:42.000Z","demo":true},{"code":"kirans180","name":"Kiran (demo)","firstName":"Kiran","college":"KL University","branch":"EEE","source":"ambassador","referredBy":"priyakq","phoneHash":"f1280063a702700dedc5f1b3","createdAt":"2026-10-27T19:57:52.000Z","demo":true},{"code":"lasyas173","name":"Lasya (demo)","firstName":"Lasya","college":"KL University","branch":"ECE","source":"referral","referredBy":"siddhs032","phoneHash":"44c546c7f40d86bab277378b","createdAt":"2026-10-27T20:05:08.000Z","demo":true},{"code":"poojas159","name":"Pooja (demo)","firstName":"Pooja","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"d06f24ebf100ac4bc7827d33","createdAt":"2026-10-27T20:09:52.000Z","demo":true},{"code":"sindhs198","name":"Sindhu (demo)","firstName":"Sindhu","college":"VIT-AP University","branch":"Mechanical","source":"ambassador","referredBy":"rahulvm","phoneHash":"21cfd9fba17b98866ec3249f","createdAt":"2026-10-27T20:18:31.000Z","demo":true},{"code":"revats167","name":"Revathi (demo)","firstName":"Revathi","college":"KL University","branch":"CSE","source":"referral","referredBy":"siddhs032","phoneHash":"4ae50c6968704b182c92d067","createdAt":"2026-10-27T20:18:52.000Z","demo":true},{"code":"geeths169","name":"Geetha (demo)","firstName":"Geetha","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"af5c585075538ad9da0ebd44","createdAt":"2026-10-27T20:34:57.000Z","demo":true},{"code":"jahnas205","name":"Jahnavi (demo)","firstName":"Jahnavi","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"c7de75685c45ffaa26c8ab26","createdAt":"2026-10-27T20:50:19.000Z","demo":true},{"code":"lakshs186","name":"Lakshmi (demo)","firstName":"Lakshmi","college":"RVR & JC College","branch":"IT","source":"influencer","referredBy":"tejacl","phoneHash":"2dbf7439c90afd2e19815f70","createdAt":"2026-10-27T20:59:42.000Z","demo":true},{"code":"anushs184","name":"Anusha (demo)","firstName":"Anusha","college":"VVIT","branch":"CSE","source":"placement","referredBy":"klplace","phoneHash":"260611fe585ad70ff23cfe6f","createdAt":"2026-10-27T21:10:11.000Z","demo":true},{"code":"lasyas233","name":"Lasya (demo)","firstName":"Lasya","college":"KL University","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"8ad4edbc5be294e0eda62717","createdAt":"2026-10-27T21:19:07.000Z","demo":true},{"code":"mahess230","name":"Mahesh (demo)","firstName":"Mahesh","college":"SRM University AP","branch":"IT","source":"referral","referredBy":"prakas114","phoneHash":"9cab0c6fecaa0ce5710319d6","createdAt":"2026-10-27T21:26:45.000Z","demo":true},{"code":"navyas200","name":"Navya (demo)","firstName":"Navya","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"8d45aa53f7a7845d0e07b338","createdAt":"2026-10-27T21:27:07.000Z","demo":true},{"code":"taruns154","name":"Tarun (demo)","firstName":"Tarun","college":"KL University","branch":"CSE","source":"ambassador","referredBy":"priyakq","phoneHash":"1e98740fec303ad7cd8d9c61","createdAt":"2026-10-27T21:29:37.000Z","demo":true},{"code":"siddhs212","name":"Siddharth (demo)","firstName":"Siddharth","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"d7a873f98535ec90abd2e56f","createdAt":"2026-10-27T21:34:26.000Z","demo":true},{"code":"akhils199","name":"Akhil (demo)","firstName":"Akhil","college":"SRM University AP","branch":"Civil","source":"placement","referredBy":"srmplace","phoneHash":"186700d0c3b113adbf4449c3","createdAt":"2026-10-27T21:57:54.000Z","demo":true},{"code":"deepis262","name":"Deepika (demo)","firstName":"Deepika","college":"VIT-AP University","branch":"IT","source":"ambassador","referredBy":"rahulvm","phoneHash":"eb8ab259904746f0e04279cd","createdAt":"2026-10-28T07:04:07.000Z","demo":true},{"code":"manojs249","name":"Manoj (demo)","firstName":"Manoj","college":"KL University","branch":"EEE","source":"ambassador","referredBy":"priyakq","phoneHash":"83958da1e9a4e3b8116b5b77","createdAt":"2026-10-28T07:11:04.000Z","demo":true},{"code":"rohits257","name":"Rohit (demo)","firstName":"Rohit","college":"SRM University AP","branch":"CSE","source":"influencer","referredBy":"tejacl","phoneHash":"db480a18f4ec0f3d6deb4be6","createdAt":"2026-10-28T07:12:38.000Z","demo":true},{"code":"taruns274","name":"Tarun (demo)","firstName":"Tarun","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"9ecda1082a520b1319ca2f8c","createdAt":"2026-10-28T07:15:26.000Z","demo":true},{"code":"gopis270","name":"Gopi (demo)","firstName":"Gopi","college":"KL University","branch":"Mechanical","source":"ambassador","referredBy":"priyakq","phoneHash":"5deb3f509e7ba956632a33e1","createdAt":"2026-10-28T07:20:26.000Z","demo":true},{"code":"likits275","name":"Likitha (demo)","firstName":"Likitha","college":"RVR & JC College","branch":"ECE","source":"placement","referredBy":"klplace","phoneHash":"3518383f27d3a277ccd323ce","createdAt":"2026-10-28T07:25:35.000Z","demo":true},{"code":"chaits253","name":"Chaitanya (demo)","firstName":"Chaitanya","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"268c6e194a543a6353a244b4","createdAt":"2026-10-28T07:38:27.000Z","demo":true},{"code":"hemas277","name":"Hema (demo)","firstName":"Hema","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"d33bae2a08e7a82a4e23b94a","createdAt":"2026-10-28T07:43:45.000Z","demo":true},{"code":"sravas248","name":"Sravani (demo)","firstName":"Sravani","college":"VIT-AP University","branch":"Mechanical","source":"ambassador","referredBy":"rahulvm","phoneHash":"6c61bdff429d489185d389db","createdAt":"2026-10-28T07:59:57.000Z","demo":true},{"code":"arjuns255","name":"Arjun (demo)","firstName":"Arjun","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"726af755639d4bb1571dc288","createdAt":"2026-10-28T08:16:31.000Z","demo":true},{"code":"siddhs272","name":"Siddharth (demo)","firstName":"Siddharth","college":"SRM University AP","branch":"IT","source":"placement","referredBy":"srmplace","phoneHash":"5e900238eda44811cc175582","createdAt":"2026-10-28T08:31:48.000Z","demo":true},{"code":"yamins273","name":"Yamini (demo)","firstName":"Yamini","college":"SRM University AP","branch":"CSE","source":"placement","referredBy":"srmplace","phoneHash":"4612929e0baa539a4448d2c0","createdAt":"2026-10-28T08:47:29.000Z","demo":true},{"code":"akhils259","name":"Akhil (demo)","firstName":"Akhil","college":"VIT-AP University","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"45e9c925c7c4bc97be8b92b0","createdAt":"2026-10-28T09:09:38.000Z","demo":true},{"code":"ajays278","name":"Ajay (demo)","firstName":"Ajay","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"b3decb8f2e53878b3f4f326a","createdAt":"2026-10-28T09:16:07.000Z","demo":true},{"code":"pavans250","name":"Pavani (demo)","firstName":"Pavani","college":"GITAM University","branch":"CSE","source":"influencer","referredBy":"keerthig","phoneHash":"ee49afc521177afa9517e9e3","createdAt":"2026-10-28T09:42:30.000Z","demo":true},{"code":"ramyas271","name":"Ramya (demo)","firstName":"Ramya","college":"VIT-AP University","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"c82506b7b3d15be2cdd3df89","createdAt":"2026-10-28T09:44:13.000Z","demo":true},{"code":"jahnas265","name":"Jahnavi (demo)","firstName":"Jahnavi","college":"SRM University AP","branch":"EEE","source":"influencer","referredBy":"tejacl","phoneHash":"d5c331d14d63c3e4aa006897","createdAt":"2026-10-28T10:02:44.000Z","demo":true},{"code":"abhins268","name":"Abhinav (demo)","firstName":"Abhinav","college":"KL University","branch":"IT","source":"referral","referredBy":"ashas045","phoneHash":"b3c07dc40be1b4bab121d790","createdAt":"2026-10-28T10:16:15.000Z","demo":true},{"code":"venkas276","name":"Venkat (demo)","firstName":"Venkat","college":"VIT-AP University","branch":"CSE","source":"ambassador","referredBy":"rahulvm","phoneHash":"bf369aa3e6f05521bfd2bac1","createdAt":"2026-10-28T10:27:59.000Z","demo":true},{"code":"poojas279","name":"Pooja (demo)","firstName":"Pooja","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"fa62c893fadbba58ccaaf935","createdAt":"2026-10-28T10:29:05.000Z","demo":true},{"code":"swaths254","name":"Swathi (demo)","firstName":"Swathi","college":"VIT-AP University","branch":"ECE","source":"ambassador","referredBy":"rahulvm","phoneHash":"fe0b70c9b6393910ed137388","createdAt":"2026-10-28T10:35:49.000Z","demo":true},{"code":"mounis269","name":"Mounika (demo)","firstName":"Mounika","college":"GITAM University","branch":"Mechanical","source":"placement","referredBy":"srmplace","phoneHash":"edbea3d4176cce2e944441c4","createdAt":"2026-10-28T10:44:42.000Z","demo":true},{"code":"praves264","name":"Praveen (demo)","firstName":"Praveen","college":"RVR & JC College","branch":"ECE","source":"placement","referredBy":"srmplace","phoneHash":"1c2b32c191634e696b942691","createdAt":"2026-10-28T11:09:03.000Z","demo":true},{"code":"nikhis251","name":"Nikhil (demo)","firstName":"Nikhil","college":"KL University","branch":"IT","source":"placement","referredBy":"klplace","phoneHash":"66ad4f4e53a1a0d8cbf3b587","createdAt":"2026-10-28T11:18:32.000Z","demo":true},{"code":"karths261","name":"Karthik (demo)","firstName":"Karthik","college":"VVIT","branch":"ECE","source":"screens","referredBy":null,"phoneHash":"c0d240f914e2a6237bf215d5","createdAt":"2026-10-28T11:28:46.000Z","demo":true},{"code":"sindhs258","name":"Sindhu (demo)","firstName":"Sindhu","college":"RVR & JC College","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"eccb6ed2171f7665c5842e4e","createdAt":"2026-10-28T11:28:55.000Z","demo":true},{"code":"hariks267","name":"Harika (demo)","firstName":"Harika","college":"KL University","branch":"IT","source":"ambassador","referredBy":"priyakq","phoneHash":"756809230083491a12462228","createdAt":"2026-10-28T11:31:05.000Z","demo":true},{"code":"navyas260","name":"Navya (demo)","firstName":"Navya","college":"KL University","branch":"Civil","source":"ambassador","referredBy":"priyakq","phoneHash":"4d14b7c51c5713ce1a37a110","createdAt":"2026-10-28T11:31:51.000Z","demo":true},{"code":"meghas256","name":"Meghana (demo)","firstName":"Meghana","college":"KL University","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"f8075838bbeb96723a69b176","createdAt":"2026-10-28T11:38:31.000Z","demo":true},{"code":"varuns263","name":"Varun (demo)","firstName":"Varun","college":"SRM University AP","branch":"ECE","source":"influencer","referredBy":"tejacl","phoneHash":"b30026fc8e6dc5ee42cd0384","createdAt":"2026-10-28T11:40:34.000Z","demo":true},{"code":"suryas266","name":"Surya (demo)","firstName":"Surya","college":"RVR & JC College","branch":"ECE","source":"ambassador","referredBy":"priyakq","phoneHash":"25bb68120e4dbb18558a6330","createdAt":"2026-10-28T11:47:33.000Z","demo":true},{"code":"bhavys252","name":"Bhavya (demo)","firstName":"Bhavya","college":"SRM University AP","branch":"IT","source":"referral","referredBy":"ramyas151","phoneHash":"1cebba037d663d810ab279dd","createdAt":"2026-10-28T11:49:49.000Z","demo":true}]};
+
+  // ================= LOCAL DATABASE (stored in this browser) =================
+  // A tiny stand-in for a real database: same calls (collection, doc, set, update, onSnapshot),
+  // saved in localStorage so each visitor gets their own working copy with demo data.
+  function makeLocalDB() {
+    const KEY = "campusboost.v1";
+    const fresh = () => ({ students: {}, partners: JSON.parse(JSON.stringify(SEED.partners)), msgs: JSON.parse(JSON.stringify(SEED.msgs)), rewards: {}, contacts: {}, payouts: JSON.parse(JSON.stringify(SEED.payouts)), demo: { students: { list: SEED.demoStudents } } });
+    let data;
+    try { data = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { data = null; }
+    if (!data || !data.partners) data = fresh();
+    const listeners = {};
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} };
+    const snap = (col) => ({ docs: Object.entries(data[col] || {}).map(([id, v]) => ({ id, exists: true, data: () => v })) });
+    const emit = (col) => setTimeout(() => {
+      (listeners[col] || []).forEach((fn) => fn(snap(col)));
+      Object.keys(data[col] || {}).forEach((id) => (listeners[col + "/" + id] || []).forEach((fn) => fn({ id, exists: true, data: () => data[col][id] })));
+    }, 0);
+    const docRef = (col, id) => ({
+      id,
+      async set(v) { data[col] = data[col] || {}; data[col][id] = JSON.parse(JSON.stringify(v)); save(); emit(col); },
+      async update(v) { data[col] = data[col] || {}; data[col][id] = Object.assign({}, data[col][id] || {}, JSON.parse(JSON.stringify(v))); save(); emit(col); },
+      onSnapshot(fn) { const k = col + "/" + id; (listeners[k] = listeners[k] || []).push(fn); setTimeout(() => { const v = (data[col] || {})[id]; fn({ id, exists: !!v, data: () => v }); }, 0); return () => {}; },
+    });
+    return {
+      collection(col) { return { doc: (id) => docRef(col, id), onSnapshot(fn) { (listeners[col] = listeners[col] || []).push(fn); setTimeout(() => fn(snap(col)), 0); return () => {}; } }; },
+      doc(path) { const [col, id] = path.split("/"); return docRef(col, id); },
+      reset() { data = fresh(); save(); Object.keys(data).forEach(emit); },
+    };
+  }
+
+  // ================= STATE =================
+  let db = null, sample = null, userApi = null, canEdit = false;
+  let students = [], partners = [], msgs = [], rewards = {}, payouts = [];
+  let boardTab = "amb", previewCode = null;
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+  };
+  const link = (tok) => ARTIFACT_URL + "#" + tok;
+  const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
+  let toastT;
+  function toast(m) { let t = document.querySelector(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); } t.textContent = m; clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600); }
+  async function sha(text) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 24);
+  }
+  function makeCode(name) { return (name.toLowerCase().replace(/[^a-z]/g, "").slice(0, 6) || "user") + Math.random().toString(36).slice(2, 5); }
+
+  // ================= DATA HELPERS =================
+  const shown = () => $("showDemo").checked;
+  const vis = (arr) => arr.filter((x) => shown() || !x.demo);
+  // Unique, verified sign-ups: one per WhatsApp number (first one wins).
+  function verified(list) {
+    const seen = new Set(); const out = [];
+    [...list].sort((a, b) => a.createdAt.localeCompare(b.createdAt)).forEach((s) => { if (!s.phoneHash || seen.has(s.phoneHash)) return; seen.add(s.phoneHash); out.push(s); });
+    return out;
+  }
+  function countFor(code, list) { return list.filter((s) => s.referredBy === code).length; }
+  function ambassadors(list) {
+    return SLOTS.map((slot) => {
+      const p = partners.find((x) => x.role === "ambassador" && x.slot === slot.id && (shown() || !x.demo));
+      const n = p ? countFor(p.code, list) : 0;
+      const earned = Math.min(slot.max, Math.round(n * PER_SIGNUP));
+      return { slot, p, n, earned };
+    });
+  }
+
+  // ================= ROUTING =================
+  const VIEWS = ["home", "register", "me", "bot", "board", "dash"];
+  function readAttr(tok) {
+    const m = /^([aipr])-([a-z0-9]+)$/i.exec(tok);
+    if (m) return { kind: m[1].toLowerCase(), ref: m[2].toLowerCase() };
+    if (tok === "c-screens") return { kind: "screens", ref: null };
+    return null;
+  }
+  function route() {
+    const tok = (location.hash || "").replace(/^#/, "");
+    const a = readAttr(tok);
+    if (a) { store.set("cb.attr", JSON.stringify(a)); show("register"); return; }
+    show(VIEWS.includes(tok) ? tok : "home");
+  }
+  function show(v) {
+    if (v === "dash" && !canEdit) v = "home";
+    if (v !== "bot") previewCode = null;
+    VIEWS.forEach((x) => $("v-" + x).classList.toggle("on", x === v));
+    document.querySelectorAll("nav.tabbar a").forEach((a) => {
+      const on = a.dataset.v === v || (v === "register" && a.dataset.v === "me");
+      on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
+    });
+    $("wrap").classList.toggle("wide", v === "dash");
+    if (v === "register") prepRegister();
+    renderView(v);
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", route);
+  function current() { const el = document.querySelector(".view.on"); return el ? el.id.slice(2) : "home"; }
+  function renderView(v) {
+    if (v === "me") renderMe();
+    if (v === "bot") renderBot();
+    if (v === "board") renderBoard();
+    if (v === "dash") renderDash();
+  }
+  function refreshAll() {
+    const total = verified(students).length;
+    $("seats").textContent = `🔥 ${Math.max(0, CAPACITY - total)} seats left`;
+    const top = collegeCounts(verified(students))[0];
+    $("teaserText").textContent = top ? `${top[0]} is leading with ${top[1]}. Can your college beat them?` : "Which college will lead? Be the first.";
+    renderView(current());
+    if (canEdit) scheduleMilestones();
+  }
+
+  // ================= REGISTER =================
+  function fillSelects() {
+    $("fCollege").innerHTML = `<option value="">Choose your college</option>` + COLLEGES.map((c) => `<option>${c}</option>`).join("") + `<option value="__other">Other college</option>`;
+    $("fBranch").innerHTML = `<option value="">Choose your branch</option>` + BRANCHES.map((b) => `<option>${b}</option>`).join("");
+  }
+  $("fCollege").addEventListener("change", (e) => $("fCollegeOther").classList.toggle("hidden", e.target.value !== "__other"));
+  function attr() { try { return JSON.parse(store.get("cb.attr") || "null"); } catch (e) { return null; } }
+  function inviterOf(a) {
+    if (!a || !a.ref) return null;
+    if (a.kind === "r") return students.find((s) => s.code === a.ref) || null;
+    return partners.find((p) => p.code === a.ref) || null;
+  }
+  function prepRegister() {
+    const a = attr(), inv = inviterOf(a), box = $("invited");
+    if (inv) { box.textContent = `🎉 ${inv.firstName} from ${inv.college} invited you. Register to join them.`; box.classList.remove("hidden"); }
+    else if (a && a.kind === "screens") { box.textContent = "👋 Welcome from the campus screen! Register below."; box.classList.remove("hidden"); }
+    else box.classList.add("hidden");
+  }
+  $("regForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const err = $("regErr"); err.classList.add("hidden");
+    const fail = (m, el) => { err.textContent = m; err.classList.remove("hidden"); if (el) el.focus(); };
+    const name = $("fName").value.trim();
+    let college = $("fCollege").value; if (college === "__other") college = $("fCollegeOther").value.trim();
+    const branch = $("fBranch").value, phone = $("fPhone").value.replace(/\D/g, "");
+    if (name.length < 2) return fail("Enter your name.", $("fName"));
+    if (!college) return fail("Choose your college.", $("fCollege"));
+    if (!branch) return fail("Choose your branch.", $("fBranch"));
+    if (!/^[6-9]\d{9}$/.test(phone)) return fail("Enter a valid 10-digit WhatsApp number.", $("fPhone"));
+    if (!$("fFinal").checked) return fail("This workshop is for final-year B.Tech students. Tick the box to confirm.", $("fFinal"));
+    if (!db) return fail("Registration isn’t available right now. Reload the page and try again.");
+    const phoneHash = await sha("cb:" + phone);
+    if (students.some((s) => s.phoneHash === phoneHash)) return fail("This WhatsApp number is already registered, so it won’t be counted twice.", $("fPhone"));
+    const a = attr(); const inv = inviterOf(a);
+    let source = "direct", referredBy = null;
+    if (a && a.kind === "screens") source = "screens";
+    else if (inv && a.kind === "r") { source = "referral"; referredBy = inv.code; }
+    else if (inv) { source = inv.role; referredBy = inv.code; }
+    const code = makeCode(name);
+    const doc = { code, name, firstName: name.split(/\s+/)[0], college, branch, source, referredBy, phoneHash, createdAt: new Date().toISOString(), demo: false };
+    $("regBtn").disabled = true; $("regBtn").textContent = "Registering…";
+    try {
+      await db.collection("students").doc(code).set(doc);
+      await db.collection("contacts").doc(code).set({ code, name, phone, createdAt: doc.createdAt });
+      store.set("cb.student", code); store.del("cb.attr");
+      if (!students.some((s) => s.code === code)) students.push(doc);
+      $("regForm").reset();
+      location.hash = "#me"; toast("You’re registered!");
+    } catch (ex) {
+      fail(ex && ex.code === "permission_denied" ? "You can’t register from this view. Ask the organiser for access." : "Couldn’t save. Check your connection and try again.");
+    } finally { $("regBtn").disabled = false; $("regBtn").textContent = "Register free"; }
+  });
+
+  // ================= STUDENT PAGE =================
+  function renderMe() {
+    const me = students.find((s) => s.code === store.get("cb.student"));
+    $("meEmpty").classList.toggle("hidden", !!me); $("meFull").classList.toggle("hidden", !me);
+    if (!me) return;
+    $("meTitle").textContent = `You’re in, ${me.firstName}!`;
+    const l = link("r-" + me.code); $("myLink").value = l;
+    $("waMy").href = "https://wa.me/?text=" + encodeURIComponent(`I’m building my own AI app in a free 60-minute workshop. Any branch, no AI background needed. Join me: ${l}`);
+    const v = verified(students); $("myPoints").textContent = countFor(me.code, v);
+    const tops = topStudents(v); const i = tops.findIndex((t) => t.s.code === me.code);
+    $("myRank").textContent = i >= 0 ? "#" + (i + 1) : "–";
+  }
+  $("copyMy").addEventListener("click", () => copy($("myLink")));
+  async function copy(input) { try { await navigator.clipboard.writeText(input.value); toast("Link copied"); } catch (e) { input.select(); toast("Press Ctrl+C to copy"); } }
+
+  // ================= PARTNER BOT =================
+  let flow = null; // onboarding state, kept in memory for this session
+  const now = () => new Date().toISOString();
+  const tm = (iso) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  function myPartner() { return partners.find((p) => p.code === (previewCode || store.get("cb.partner"))) || null; }
+
+  function renderBot() {
+    const p = myPartner();
+    $("previewNote").classList.toggle("hidden", !previewCode);
+    if (previewCode && p) $("previewNote").textContent = `Organiser preview: you’re seeing ${p.firstName}’s chat.`;
+    $("botReset").classList.toggle("hidden", !!previewCode);
+    $("chatForm").classList.toggle("hidden", !!previewCode);
+    const chat = $("chat"); chat.innerHTML = "";
+    if (p) {
+      chat.appendChild(progressCard(p));
+      const mine = msgs.filter((m) => m.to === p.code).sort((a, b) => a.at.localeCompare(b.at));
+      let lastDay = "";
+      mine.forEach((m) => {
+        const d = new Date(m.at).toDateString();
+        if (d !== lastDay) { const c = document.createElement("div"); c.className = "day-chip"; c.textContent = new Date(m.at).toLocaleDateString(undefined, { day: "numeric", month: "short" }); chat.appendChild(c); lastDay = d; }
+        chat.appendChild(bubble(String(m.text).replace("{{LINK}}", link(PREFIX[p.role] + "-" + p.code)), "bot", m.at, m.kind === "milestone" || m.kind === "reward"));
+      });
+      setQuick(previewCode ? [] : [["📊 My progress", () => replyProgress(p)], ["🔗 My link", () => replyLink(p)], ["📜 Rules", () => replyRules(p)]]);
+    } else {
+      if (!flow) startFlow();
+      flow.log.forEach((m) => chat.appendChild(bubble(m.text, m.who, m.at)));
+      setQuick(flow.quick || []);
+    }
+    chat.scrollTop = chat.scrollHeight;
+  }
+  function bubble(text, who, at, alert) {
+    const b = document.createElement("div"); b.className = "bubble " + who + (alert ? " alert" : "");
+    String(text).split(/(https:\/\/\S+)/).forEach((part) => {
+      if (/^https:\/\//.test(part)) { const s = document.createElement("span"); s.className = "lk"; s.textContent = part; b.appendChild(s); }
+      else b.appendChild(document.createTextNode(part));
+    });
+    const t = document.createElement("time"); t.textContent = tm(at || now()); b.appendChild(t);
+    return b;
+  }
+  function progressCard(p) {
+    const v = verified(students); const n = countFor(p.code, v);
+    const box = document.createElement("div"); box.className = "progress-card";
+    if (p.role === "ambassador") {
+      const slot = SLOTS.find((s) => s.id === p.slot) || SLOTS[2];
+      const earned = Math.min(slot.max, Math.round(n * PER_SIGNUP));
+      box.innerHTML = `<b></b><div class="pbar"><i style="width:${Math.min(100, (n / slot.target) * 100)}%"></i></div><div class="small muted" style="margin-top:4px"></div>`;
+      box.querySelector("b").textContent = `Ambassador ${slot.id} · ${n} of ${slot.target} sign-ups`;
+      box.querySelector("div.small").textContent = `Earned so far: ${inr(earned)} of ${inr(slot.max)}`;
+    } else {
+      box.innerHTML = `<b></b>`; box.querySelector("b").textContent = `${ROLE_LABEL[p.role]} · ${n} sign-ups through your link`;
+    }
+    return box;
+  }
+  function setQuick(items) {
+    const q = $("quick"); q.innerHTML = "";
+    items.forEach(([label, fn]) => { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.addEventListener("click", fn); q.appendChild(b); });
+  }
+  function say(text, who) { flow.log.push({ text, who: who || "bot", at: now() }); }
+  function freeSlot() {
+    const taken = partners.filter((p) => p.role === "ambassador").map((p) => p.slot);
+    return SLOTS.find((s) => !taken.includes(s.id)) || null;
+  }
+  function startFlow() {
+    flow = { step: "role", data: {}, log: [], quick: [] };
+    say("Hi! 👋 I’m CampusBoost, the partner bot for NxtWave’s free workshop “Build Your First AI Project in 60 Minutes”.\n\nWho are you?");
+    roleQuick();
+  }
+  function roleQuick() {
+    flow.quick = [
+      ["🎓 Campus ambassador", () => pickRole("ambassador")],
+      ["📣 Influencer / club lead", () => pickRole("influencer")],
+      ["🏢 Placement coordinator", () => pickRole("placement")],
+    ];
+  }
+  function pickRole(role) {
+    say(ROLE_LABEL[role], "me");
+    if (role === "ambassador") {
+      const s = freeSlot();
+      if (!s) { say("All 3 ambassador spots are already filled. 🙌 You can still help as an influencer or club lead, with your own tracked link."); roleQuick(); return renderBot(); }
+      flow.data.slot = s.id;
+      say(`Great! You’ll be Ambassador ${s.id}, with a target of ${s.target} sign-ups. You earn ₹1.20 for every verified sign-up, up to ${inr(s.max)}.`);
+    }
+    flow.data.role = role; flow.step = "name"; flow.quick = [];
+    say("What’s your full name?");
+    renderBot();
+  }
+  function onText(text) {
+    if (!flow || myPartner()) return;
+    const t = text.trim(); if (!t) return;
+    say(t, "me");
+    if (flow.step === "name") {
+      if (t.length < 2) { say("Please type your full name."); return renderBot(); }
+      flow.data.name = t; flow.step = "college";
+      say(`Nice to meet you, ${t.split(/\s+/)[0]}! Which college are you from?`);
+      flow.quick = COLLEGES.map((c) => [c, () => onText(c)]);
+    } else if (flow.step === "college") {
+      flow.data.college = t; flow.quick = [];
+      if (flow.data.role === "placement") { flow.step = "rules"; return rulesStep(); }
+      flow.step = "branch"; say("Your branch?");
+      flow.quick = BRANCHES.map((b) => [b, () => onText(b)]);
+    } else if (flow.step === "branch") {
+      flow.data.branch = t; flow.quick = [];
+      flow.step = "upi"; say("Your UPI ID for rewards (like name@ybl).\n\n🔒 We only need the UPI ID. Never share your UPI PIN or any OTP.");
+    } else if (flow.step === "upi") {
+      if (!/^[a-zA-Z0-9._-]{2,}@[a-zA-Z]{2,}$/.test(t)) { say("That doesn’t look like a UPI ID. It should look like name@bank, for example priya@ybl."); return renderBot(); }
+      flow.data.upi = t; flow.step = "rules"; return rulesStep();
+    } else if (flow.step === "rules") {
+      say("Tap “I agree” to continue.");
+    }
+    renderBot();
+  }
+  function rulesText(role, slotId) {
+    if (role === "ambassador") {
+      const s = SLOTS.find((x) => x.id === slotId);
+      return `📜 Ambassador rules\n• Share your link in your class and department WhatsApp groups\n• Target: ${s.target} verified sign-ups in 7 days\n• Reward: ₹1.20 per verified sign-up, up to ${inr(s.max)}, paid by UPI after the campaign\n• Only unique, final-year students count. The same number twice counts once\n• No payback if you miss the target. You keep what you earned\n• Everyone gets an ambassador certificate`;
+    }
+    if (role === "influencer") return "📜 Influencer rules\n• Post the workshop poster or video with your link\n• The 2 partners who bring the most sign-ups get ₹100 each for their post\n• Everyone gets a shoutout and a certificate";
+    return "📜 Placement coordinator\n• Share one official message with your link to final-year students\n• Your college appears on the live leaderboard\n• You get a weekly summary of how many students joined";
+  }
+  function rulesStep() {
+    say(rulesText(flow.data.role, flow.data.slot));
+    flow.quick = [["✅ I agree", () => finish()], ["Not now", () => { say("Not now", "me"); say("No problem. Come back any time."); flow.quick = [["Start again", () => { flow = null; renderBot(); }]]; renderBot(); }]];
+    renderBot();
+  }
+  async function finish() {
+    say("I agree", "me"); flow.quick = []; renderBot();
+    if (!db) { say("I can’t save your details right now. Reload the page and try again."); return renderBot(); }
+    const d = flow.data;
+    if (d.role === "ambassador") {
+      const s = freeSlot();
+      if (!s) { say("Sorry, the last ambassador spot was just taken. You can join as an influencer instead."); roleQuick(); return renderBot(); }
+      d.slot = s.id;
+    }
+    const code = makeCode(d.name);
+    const p = { code, role: d.role, slot: d.slot || null, name: d.name, firstName: d.name.split(/\s+/)[0], college: d.college, branch: d.branch || null, milestonesSent: [], createdAt: now(), demo: false };
+    try {
+      await db.collection("partners").doc(code).set(p);
+      if (d.upi) await db.collection("payouts").doc(code).set({ code, upi: d.upi, at: now() });
+      const tok = PREFIX[d.role] + "-" + code;
+      const welcome = [
+        `🎉 You’re registered as ${d.role === "ambassador" ? "Ambassador " + d.slot : ROLE_LABEL[d.role]}!\n\nYour code: ${code.toUpperCase()}\nYour link: ${link(tok)}`,
+        `📲 How to share\nPost this in your class and department groups:\n\n“Final-years: build your own AI app in a free 60-minute workshop. Any branch, no AI background needed. Register here: ${link(tok)}”`,
+        rulesText(d.role, d.slot),
+        "I’ll message you right here when you hit 10 sign-ups and at every 25% of your target. Type “progress” any time.",
+      ];
+      for (let i = 0; i < welcome.length; i++) {
+        await db.collection("msgs").doc(`${code}-w${i}`).set({ to: code, text: welcome[i], at: new Date(Date.now() + i).toISOString(), kind: "welcome", demo: false });
+      }
+      store.set("cb.partner", code);
+      partners.push(p); welcome.forEach((t, i) => msgs.push({ to: code, text: t, at: new Date(Date.now() + i).toISOString(), kind: "welcome" }));
+      flow = null; renderBot();
+    } catch (e) { say("Couldn’t save your details. Check your connection and try again."); renderBot(); }
+  }
+  function localReply(p, text) {
+    const chat = $("chat"); chat.appendChild(bubble(text, "bot", now())); chat.scrollTop = chat.scrollHeight;
+  }
+  function replyProgress(p) {
+    const n = countFor(p.code, verified(students));
+    if (p.role === "ambassador") { const s = SLOTS.find((x) => x.id === p.slot); localReply(p, `📊 ${n} of ${s.target} verified sign-ups (${Math.round((n / s.target) * 100)}%). Earned so far: ${inr(Math.min(s.max, Math.round(n * PER_SIGNUP)))}.`); }
+    else localReply(p, `📊 ${n} students have joined through your link.`);
+  }
+  function replyLink(p) { localReply(p, `🔗 ${link(PREFIX[p.role] + "-" + p.code)}`); }
+  function replyRules(p) { localReply(p, rulesText(p.role, p.slot)); }
+  $("chatForm").addEventListener("submit", (e) => {
+    e.preventDefault(); const v = $("chatText").value; $("chatText").value = "";
+    const p = myPartner();
+    if (p) { const chat = $("chat"); chat.appendChild(bubble(v, "me", now())); if (/progress|count|status/i.test(v)) replyProgress(p); else if (/link/i.test(v)) replyLink(p); else if (/rule/i.test(v)) replyRules(p); else localReply(p, "Tap “My progress”, “My link” or “Rules” below."); return; }
+    onText(v);
+  });
+  $("botReset").addEventListener("click", () => { store.del("cb.partner"); flow = null; renderBot(); });
+
+  // ================= MILESTONE ENGINE (automatic messages) =================
+  let msTimer = null;
+  function scheduleMilestones() { clearTimeout(msTimer); msTimer = setTimeout(runMilestones, 600); }
+  async function runMilestones() {
+    if (!db || !canEdit) return;
+    const v = verified(students);
+    for (const p of partners) {
+      const n = countFor(p.code, v);
+      let marks = [10];
+      if (p.role === "ambassador") { const s = SLOTS.find((x) => x.id === p.slot); if (s) marks = [10, Math.ceil(s.target * .25), Math.ceil(s.target * .5), Math.ceil(s.target * .75), s.target]; }
+      marks = [...new Set(marks)].sort((a, b) => a - b);
+      const sent = p.milestonesSent || [];
+      const due = marks.filter((m) => n >= m && !sent.includes(m));
+      if (!due.length) continue;
+      for (const m of due) {
+        let text;
+        if (p.role === "ambassador") {
+          const s = SLOTS.find((x) => x.id === p.slot);
+          text = m >= s.target ? `🏆 Target reached! ${m} verified sign-ups. Your full reward of ${inr(s.max)} is now eligible. Payment status: Pending approval.`
+            : `🎉 Milestone: ${m} verified sign-ups (${Math.round((m / s.target) * 100)}% of your target). Earned so far: ${inr(Math.round(m * PER_SIGNUP))}. Keep going!`;
+        } else text = `🎉 ${m} students have registered through your link. Thank you!`;
+        try { await db.collection("msgs").doc(`${p.code}-m${m}`).set({ to: p.code, text, at: now(), kind: "milestone", demo: !!p.demo }); } catch (e) { return; }
+      }
+      try { await db.collection("partners").doc(p.code).update({ milestonesSent: [...sent, ...due] }); } catch (e) {}
+    }
+  }
+
+  // ================= REWARDS & BUDGET =================
+  function rewardLines() {
+    const v = verified(vis(students));
+    const lines = [];
+    ambassadors(v).forEach(({ slot, p, n, earned }) => lines.push({ id: "amb-" + slot.id, label: `Ambassador ${slot.id}`, who: p ? p.firstName : "Not filled", toCode: p ? p.code : null, basis: `${n} of ${slot.target} sign-ups × ₹1.20`, max: slot.max, earned }));
+    const infl = vis(partners).filter((p) => p.role === "influencer").map((p) => ({ p, n: countFor(p.code, v) })).sort((a, b) => b.n - a.n);
+    [0, 1].forEach((i) => { const x = infl[i]; lines.push({ id: "inf-" + (i + 1), label: `Influencer post ${i + 1}`, who: x ? x.p.firstName : "–", toCode: x ? x.p.code : null, basis: x ? `${x.n} sign-ups (top ${i + 1})` : "No influencer yet", max: 100, earned: x && x.n > 0 ? 100 : 0 }); });
+    const topS = topStudents(v)[0];
+    lines.push({ id: "topref", label: "Highest student referrer", who: topS ? topS.s.firstName : "–", toCode: null, basis: topS ? `${topS.n} friends invited` : "No referrals yet", max: 200, earned: topS ? 200 : 0 });
+    lines.push({ id: "vouchers", label: "AI cert exam vouchers (top 3 students)", who: "After the workshop", toCode: null, basis: "Reserved; any extra cost co-funded by a sponsor", max: 1000, earned: 1000, reserved: true });
+    return lines;
+  }
+  async function setRewardStatus(line, status) {
+    if (!db || !canEdit) return;
+    const lines = rewardLines();
+    const reserved = lines.filter((l) => l.reserved).reduce((a, l) => a + l.max, 0);
+    const committedOther = reserved + lines.filter((l) => l.id !== line.id && !l.reserved).reduce((a, l) => a + ((rewards[l.id] && rewards[l.id].status !== "Pending") ? (rewards[l.id].amount || 0) : 0), 0);
+    const amount = line.earned;
+    if (committedOther + amount > BUDGET) { toast("Blocked: this would take rewards above ₹2,000."); return; }
+    try {
+      await db.collection("rewards").doc(line.id).set({ id: line.id, status, amount, who: line.who, toCode: line.toCode, at: now() });
+      if (line.toCode) {
+        const text = status === "Approved" ? `✅ Your reward of ${inr(amount)} is approved. Payment status: Pending transfer to your UPI ID.` : `💸 ${inr(amount)} has been sent to your UPI ID. Payment status: Paid. Thank you for growing the workshop!`;
+        await db.collection("msgs").doc(`${line.toCode}-r-${status}`).set({ to: line.toCode, text, at: now(), kind: "reward", demo: false });
+      }
+      toast(`${line.label}: ${status}`);
+    } catch (e) { toast("Couldn’t update the reward. Try again."); }
+  }
+
+  // ================= LEADERBOARD =================
+  function collegeCounts(list) { const m = new Map(); list.forEach((s) => m.set(s.college, (m.get(s.college) || 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); }
+  function topStudents(list) {
+    const by = new Map(students.map((s) => [s.code, s])); const m = new Map();
+    list.forEach((s) => { if (s.source === "referral" && s.referredBy && by.has(s.referredBy)) m.set(s.referredBy, (m.get(s.referredBy) || 0) + 1); });
+    return [...m.entries()].map(([c, n]) => ({ s: by.get(c), n })).sort((a, b) => b.n - a.n);
+  }
+  document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => { boardTab = b.dataset.tab; renderBoard(); }));
+  function renderBoard() {
+    document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === boardTab)));
+    const v = verified(students); const list = $("rankList"); list.innerHTML = "";
+    let rows;
+    if (boardTab === "amb") rows = ambassadors(v).filter((x) => x.p).sort((a, b) => b.n - a.n).map((x) => ({ a: `${x.p.firstName} · Ambassador ${x.slot.id}`, b: `${x.p.college} · target ${x.slot.target}`, n: x.n, label: "sign-ups", pct: x.n / x.slot.target }));
+    else if (boardTab === "col") rows = collegeCounts(v).slice(0, 10).map(([c, n]) => ({ a: c, b: "registered students", n, label: "sign-ups" }));
+    else rows = topStudents(v).slice(0, 10).map(({ s, n }) => ({ a: s.firstName + (s.code === store.get("cb.student") ? " (you)" : ""), b: `${s.college} · ${s.branch}`, n, label: n === 1 ? "friend" : "friends" }));
+    if (!rows.length) { const li = document.createElement("li"); li.innerHTML = `<span></span><span class="who"><b>No one yet</b><span>Be the first.</span></span><span></span>`; list.appendChild(li); }
+    const max = Math.max(1, ...rows.map((r) => r.n));
+    rows.forEach((r, i) => {
+      const li = document.createElement("li"); if (i < 3) li.className = "t" + (i + 1);
+      const pos = document.createElement("span"); pos.className = "pos"; pos.textContent = i + 1;
+      const who = document.createElement("span"); who.className = "who";
+      const b = document.createElement("b"); b.textContent = r.a; const s = document.createElement("span"); s.textContent = r.b;
+      const bar = document.createElement("div"); bar.className = "bar"; bar.innerHTML = `<i style="width:${Math.round((r.pct != null ? Math.min(1, r.pct) : r.n / max) * 100)}%"></i>`;
+      who.append(b, s, bar);
+      const sc = document.createElement("span"); sc.className = "score"; sc.innerHTML = `${r.n}<small>${r.label}</small>`;
+      li.append(pos, who, sc); list.appendChild(li);
+    });
+    const demoN = students.filter((s) => s.demo).length;
+    $("boardNote").textContent = demoN ? `Includes ${demoN} demo sign-ups so the prototype isn’t empty.` : "";
+  }
+
+  // ================= DASHBOARD =================
+  $("showDemo").addEventListener("change", () => renderDash());
+  function campaignStart(list) {
+    const ts = list.map((s) => Date.parse(s.createdAt)).filter((t) => !isNaN(t));
+    const s = new Date(ts.length ? Math.min(...ts) : Date.now()); s.setHours(0, 0, 0, 0); s.setDate(s.getDate() - 1); return s;
+  }
+  const dayOf = (iso, start) => Math.floor((Date.parse(iso) - start) / 86400000) + 1;
+  function hbars(el, entries, colorFor) {
+    el.innerHTML = ""; if (!entries.length) { el.innerHTML = `<p class="muted small">No sign-ups yet.</p>`; return; }
+    const max = Math.max(1, ...entries.map((e) => e[1]));
+    entries.forEach(([k, n, key]) => {
+      const row = document.createElement("div"); row.className = "hbar";
+      const lab = document.createElement("span"); lab.textContent = k; row.appendChild(lab);
+      row.insertAdjacentHTML("beforeend", `<div class="track"><div class="fill" style="width:${(n / max) * 100}%;background:${colorFor(key || k)}"></div></div><b>${n}</b>`);
+      el.appendChild(row);
+    });
+  }
+  function renderDash() {
+    if (!canEdit) return;
+    const v = verified(vis(students));
+    const start = campaignStart(v); const today = dayOf(now(), start);
+    $("kTotal").textContent = v.length;
+    $("kToday").textContent = v.filter((s) => dayOf(s.createdAt, start) === today).length;
+    $("kDay").textContent = Math.min(Math.max(today, 1), 7) + " / 7";
+    const lines = rewardLines(); const earned = lines.filter((l) => !l.reserved).reduce((a, l) => a + l.earned, 0);
+    $("kSpent").textContent = inr(earned + 1000);
+
+    // ambassadors
+    const grid = $("ambGrid"); grid.innerHTML = "";
+    const colors = [["var(--butter)", "var(--butter-ink)"], ["var(--lav)", "var(--lav-ink)"], ["var(--mint)", "var(--mint-ink)"]];
+    ambassadors(v).forEach(({ slot, p, n, earned }, i) => {
+      const c = document.createElement("div"); c.className = "amb"; c.style.background = colors[i][0]; c.style.color = colors[i][1];
+      const pct = Math.min(100, Math.round((n / slot.target) * 100));
+      c.innerHTML = `<div class="slot">Ambassador ${slot.id} · target ${slot.target}</div><b class="nm"></b><div class="small nmc"></div><div class="big">${n} <span class="small">/ ${slot.target}</span></div><div class="pbar"><i style="width:${pct}%"></i></div><div class="row"><span>${pct}% done</span><span>Earned ${inr(earned)} of ${inr(slot.max)}</span></div><div class="acts"></div>`;
+      c.querySelector(".nm").textContent = p ? p.firstName + (p.demo ? "" : "") : "Spot open";
+      c.querySelector(".nmc").textContent = p ? p.college : "Onboard through the partner bot";
+      if (p && p.demo) c.querySelector(".nm").insertAdjacentHTML("beforeend", `<span class="demo-tag">demo</span>`);
+      const acts = c.querySelector(".acts");
+      if (p) {
+        const t = document.createElement("a"); t.href = "#a-" + p.code; t.textContent = "Test sign-up link"; acts.appendChild(t);
+        const ch = document.createElement("button"); ch.type = "button"; ch.textContent = "View chat"; ch.addEventListener("click", () => { location.hash = "#bot"; setTimeout(() => { previewCode = p.code; renderBot(); }, 0); }); acts.appendChild(ch);
+      } else { const a = document.createElement("a"); a.href = "#bot"; a.textContent = "Open partner bot"; acts.appendChild(a); }
+      grid.appendChild(c);
+    });
+
+    // daily table + day-3 check
+    let cum = 0, html = `<thead><tr><th>Day</th><th>Plan</th><th class="num">New</th><th class="num">Total</th><th class="num">Target</th><th></th></tr></thead><tbody>`, al = null;
+    for (let d = 1; d <= 7; d++) {
+      const n = v.filter((s) => dayOf(s.createdAt, start) === d).length; cum += n;
+      const done = d <= today; let pill = "";
+      if (done && d < today) pill = cum >= DAY_TARGETS[d - 1] ? `<span class="pill p-ok">On track</span>` : `<span class="pill p-bad">Behind</span>`;
+      if (d === today) pill = `<span class="pill p-today">Today, in progress</span>`;
+      html += `<tr><td>Day ${d}</td><td>${DAY_PLAN[d - 1]}</td><td class="num">${done ? n : "–"}</td><td class="num"><b>${done ? cum : "–"}</b></td><td class="num">${DAY_TARGETS[d - 1]}</td><td>${pill}</td></tr>`;
+      if (d === 3 && today >= 3) al = cum < 240 ? { bad: true, t: `Day 3 check: ${cum} of 240. Backup plan: turn on 24-hour double points and ask placement cells for a second message.` } : { bad: false, t: `Day 3 check: ${cum} of 240. On track.` };
+    }
+    $("daysTable").innerHTML = html + "</tbody>";
+    const box = $("dashAlert"); box.innerHTML = ""; if (al) { const dv = document.createElement("div"); dv.className = "alert" + (al.bad ? "" : " good"); dv.textContent = al.t; box.appendChild(dv); }
+
+    const bySrc = {}; v.forEach((s) => { bySrc[s.source] = (bySrc[s.source] || 0) + 1; });
+    hbars($("bySource"), Object.entries(bySrc).sort((a, b) => b[1] - a[1]).map(([k, n]) => [SRC[k] || k, n, k]), (k) => SRC_COLOR[k] || "var(--muted)");
+    hbars($("byCollege"), collegeCounts(v).slice(0, 8), () => "var(--sage)");
+
+    // rewards table + budget meter
+    const committed = (st) => lines.reduce((a, l) => a + ((rewards[l.id] && rewards[l.id].status === st) ? (rewards[l.id].amount || 0) : 0), 0);
+    const paid = committed("Paid"), appr = committed("Approved");
+    const earnedPend = lines.reduce((a, l) => a + ((!rewards[l.id] || rewards[l.id].status === "Pending") ? l.earned : 0), 0);
+    const pct = (x) => (x / BUDGET) * 100;
+    $("budgetMeter").innerHTML = `<i style="width:${pct(paid)}%;background:var(--sage)"></i><i style="width:${pct(appr)}%;background:#E9BE5C"></i><i style="width:${pct(earnedPend)}%;background:#B9A8EA"></i>`;
+    $("budgetLegend").innerHTML = `<span style="--c:var(--sage)">Paid ${inr(paid)}</span><span style="--c:#E9BE5C">Approved ${inr(appr)}</span><span style="--c:#B9A8EA">Earned / reserved ${inr(earnedPend)}</span><span style="--c:var(--line)">Unused ${inr(Math.max(0, BUDGET - paid - appr - earnedPend))}</span><span><b>Cap ₹2,000</b></span>`;
+    const rt = $("rewardTable");
+    rt.innerHTML = `<thead><tr><th>Reward</th><th>Who</th><th>Based on</th><th class="num">Earned / max</th><th>Status</th><th></th></tr></thead>`;
+    const tb = document.createElement("tbody");
+    lines.forEach((l) => {
+      const st = (rewards[l.id] && rewards[l.id].status) || "Pending";
+      const tr = document.createElement("tr");
+      const cells = [l.label, l.who, l.basis, `${inr(l.earned)} / ${inr(l.max)}`];
+      cells.forEach((t, i) => { const td = document.createElement("td"); td.textContent = t; if (i === 3) td.className = "num"; tr.appendChild(td); });
+      const sTd = document.createElement("td"); sTd.innerHTML = `<span class="pill ${st === "Paid" ? "p-ok" : st === "Approved" ? "p-appr" : "p-pend"}">${st}</span>`; tr.appendChild(sTd);
+      const aTd = document.createElement("td");
+      if (!l.reserved) {
+        const next = st === "Pending" ? "Approved" : st === "Approved" ? "Paid" : null;
+        if (next) { const b = document.createElement("button"); b.type = "button"; b.className = "btn btn-soft btn-sm"; b.textContent = next === "Approved" ? "Approve" : "Mark paid"; b.disabled = l.earned <= 0; b.addEventListener("click", () => setRewardStatus(l, next)); aTd.appendChild(b); }
+      }
+      tr.appendChild(aTd); tb.appendChild(tr);
+    });
+    rt.appendChild(tb);
+
+    // other partners
+    const pl = $("partnerList"); pl.innerHTML = "";
+    const others = vis(partners).filter((p) => p.role !== "ambassador");
+    if (!others.length) pl.innerHTML = `<p class="muted small">No influencers or placement coordinators yet.</p>`;
+    others.sort((a, b) => countFor(b.code, v) - countFor(a.code, v)).forEach((p) => {
+      const d = document.createElement("div"); d.className = "small"; d.style.padding = "8px 0"; d.style.borderBottom = "1px dashed var(--line)";
+      const b = document.createElement("b"); b.textContent = `${p.firstName} · ${ROLE_LABEL[p.role]}`;
+      const s = document.createElement("div"); s.className = "muted"; s.textContent = `${p.college} · ${countFor(p.code, v)} sign-ups`;
+      const a = document.createElement("a"); a.href = "#" + PREFIX[p.role] + "-" + p.code; a.textContent = "Test link";
+      d.append(b, s, a); pl.appendChild(d);
+    });
+    $("qrLink").textContent = link("c-screens");
+
+    const rec = $("recent"); rec.innerHTML = "";
+    const byCode = new Map([...partners, ...students].map((x) => [x.code, x]));
+    [...v].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6).forEach((s) => {
+      const li = document.createElement("li"); li.style.gridTemplateColumns = "1fr auto";
+      const w = document.createElement("span"); w.className = "who";
+      const b = document.createElement("b"); b.textContent = `${s.firstName} · ${s.branch}`;
+      if (s.demo) b.insertAdjacentHTML("beforeend", `<span class="demo-tag">demo</span>`);
+      const by = s.referredBy && byCode.get(s.referredBy);
+      const sp = document.createElement("span"); sp.textContent = `${s.college} · ${by ? "via " + by.firstName : SRC[s.source] || s.source}`;
+      w.append(b, sp);
+      const t = document.createElement("span"); t.className = "small muted"; t.textContent = new Date(s.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+      li.append(w, t); rec.appendChild(li);
+    });
+  }
+
+  // ================= SMART RECOMMENDATION (rule-based) =================
+  $("aiBtn").addEventListener("click", () => {
+    const out = $("aiOut"); out.innerHTML = "";
+    const v = verified(vis(students)); const start = campaignStart(v);
+    const today = Math.min(Math.max(dayOf(now(), start), 1), 7);
+    const tips = [];
+    // 1. Pace against the plan
+    const target = DAY_TARGETS[today - 1], prevTarget = DAY_TARGETS[Math.max(0, today - 2)];
+    if (v.length >= target) tips.push(`On track: ${v.length} sign-ups vs today’s target of ${target}. Keep the same plan and start the next booster early.`);
+    else if (v.length >= prevTarget) tips.push(`${target - v.length} more sign-ups needed to hit today’s target of ${target}. Send an evening reminder in the strongest groups.`);
+    else tips.push(`Behind plan: ${v.length} vs ${target}. Turn on 24-hour double points and ask placement cells for a second message.`);
+    // 2. Strongest channel
+    const bySrc = {}; v.forEach((s) => { bySrc[s.source] = (bySrc[s.source] || 0) + 1; });
+    const ranked = Object.entries(bySrc).sort((x, y) => y[1] - x[1]);
+    if (ranked.length) { const [k, n] = ranked[0]; tips.push(`${SRC[k] || k} bring the most sign-ups (${n}, ${Math.round((n / v.length) * 100)}%). Put more effort there tomorrow.`); }
+    // 3. Ambassador who needs help (furthest behind their expected pace)
+    const expected = today / 7;
+    const amb = ambassadors(v).filter((x) => x.p).map((x) => ({ ...x, gap: expected - x.n / x.slot.target })).sort((x, y) => y.gap - x.gap);
+    const open = ambassadors(v).filter((x) => !x.p);
+    if (open.length) tips.push(`Ambassador ${open[0].slot.id}’s spot (target ${open[0].slot.target}) is still empty. Recruit someone today through the partner bot.`);
+    else if (amb.length && amb[0].gap > 0) tips.push(`${amb[0].p.firstName} (Ambassador ${amb[0].slot.id}) is at ${amb[0].n} of ${amb[0].slot.target}. Message them with tips and a fresh poster for their groups.`);
+    // 4. Weak colleges
+    const cols = collegeCounts(v); if (cols.length > 3) tips.push(`${cols[cols.length - 1][0]} has only ${cols[cols.length - 1][1]} sign-ups. Ask its placement cell to share the link.`);
+    const tip = document.createElement("div"); tip.className = "ai-tip"; tip.textContent = tips.slice(0, 3).map((t) => "• " + t).join("\n");
+    out.appendChild(tip);
+  });
+
+  // ================= BOOT =================
+  fillSelects(); route();
+
+  canEdit = true;
+  $("navDash").classList.remove("hidden");
+  db = makeLocalDB();
+  (() => {
+    let realStudents = [], demoStudents = [];
+    const mergeStudents = () => { students = realStudents.concat(demoStudents); refreshAll(); };
+    db.collection("students").onSnapshot((s) => { realStudents = s.docs.map((d) => d.data()).filter((x) => x && x.code); mergeStudents(); });
+    db.doc("demo/students").onSnapshot((d) => { const data = d.exists ? d.data() : null; demoStudents = (data && Array.isArray(data.list) ? data.list : []).filter((x) => x && x.code); mergeStudents(); });
+    db.collection("partners").onSnapshot((s) => { partners = s.docs.map((d) => d.data()).filter((x) => x && x.code); refreshAll(); });
+    db.collection("msgs").onSnapshot((s) => { msgs = s.docs.map((d) => d.data()).filter((x) => x && x.to); if (current() === "bot") renderBot(); });
+    db.collection("rewards").onSnapshot((s) => { rewards = {}; s.docs.forEach((d) => { const r = d.data(); if (r) rewards[d.id] = r; }); if (current() === "dash") renderDash(); });
+  })();
+  route();
+  $("resetDemo").addEventListener("click", () => {
+    if (!confirm("Reset everything back to the starting demo data? Your test sign-ups and partners will be removed.")) return;
+    store.del("cb.partner"); store.del("cb.student"); store.del("cb.attr"); flow = null; db.reset(); toast("Demo data reset");
+  });
+})();
+</script>
+</body>
+</html>
