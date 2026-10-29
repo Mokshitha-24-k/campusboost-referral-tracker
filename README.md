@@ -6,8 +6,9 @@ A working prototype for the NxtWave Growth Intern challenge: get 500 final-year 
 
 - **Partner bot (WhatsApp-style):** campus ambassadors, influencers and placement coordinators onboard in a chat and get a unique referral code and link.
 - **Referral tracking:** every sign-up is credited to the right ambassador or channel. The same WhatsApp number is never counted twice.
-- **Automatic milestone messages:** the bot messages a partner at 10 sign-ups and at every 25% of their target.
-- **Rewards and budget:** 3 ambassadors with targets of 250 / 150 / 100 earn ₹1.20 per verified sign-up (up to ₹300 / ₹180 / ₹120). Rewards move from Pending → Approved → Paid, and the total can never go above ₹2,000.
+- **Ambassador race:** 25 campus ambassadors (goal: about 10 verified sign-ups each) compete on a live leaderboard. The top 3 win ₹250 / ₹200 / ₹150 by UPI, and everyone gets a certificate.
+- **Automatic milestone messages:** the bot messages an ambassador at 5, 10, 20 and 50 sign-ups, and when they enter the top 3.
+- **Rewards and budget:** top 3 ambassadors, 2 influencer posts (₹100 each), the highest student referrer (₹200) and AI certification exam vouchers (₹1,000). Rewards move from Pending → Approved → Paid, and the total can never go above ₹2,000.
 - **Organiser dashboard:** progress to 500, daily target vs actual, sign-ups by channel and college, a Day 3 backup-plan alert, and a recommendation for where to push next.
 
 ## Notes
