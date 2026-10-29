@@ -431,7 +431,7 @@ nav.tabbar a[aria-current="page"] { color: var(--ink); background: var(--lav); }
     const shiftDates = (obj) => {
       const t = new Date(); t.setHours(0, 0, 0, 0);
       const ms = Math.round((t - new Date(2026, 9, 28)) / 86400000) * 86400000;
-      const walk = (o) => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === "object") Object.keys(o).forEach((k) => { if ((k === "createdAt" || k === "at") && typeof o[k] === "string") o[k] = new Date(Date.parse(o[k]) + ms).toISOString(); else walk(o[k]); }); };
+      const walk = (o) => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === "object") Object.keys(o).forEach((k) => { if ((k === "createdAt" || k === "at") && typeof o[k] === "string") o[k] = new Date(Date.parse(o[k].replace("Z", "")) + ms).toISOString(); else walk(o[k]); }); };
       walk(obj); return obj;
     };
     const fresh = () => shiftDates({ students: {}, partners: JSON.parse(JSON.stringify(SEED.partners)), msgs: JSON.parse(JSON.stringify(SEED.msgs)), rewards: {}, contacts: {}, payouts: JSON.parse(JSON.stringify(SEED.payouts)), demo: { students: { list: JSON.parse(JSON.stringify(SEED.demoStudents)) } } });
